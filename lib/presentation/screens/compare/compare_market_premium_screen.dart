@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
+
 import '../../../domain/entities/market_total_cost.dart';
 import '../../providers/price_provider.dart';
 
@@ -18,7 +20,6 @@ class _CompareMarketPremiumScreenState
     with SingleTickerProviderStateMixin {
 
   bool sortAsc = true;
-
   late AnimationController controller;
 
   @override
@@ -41,6 +42,30 @@ class _CompareMarketPremiumScreenState
     super.dispose();
   }
 
+  // ======================================================
+  // 🎆 TẾT BACKGROUND
+  // ======================================================
+
+  Widget _buildTetBackground() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF8B0000),
+            Color(0xFFD32F2F),
+            Color(0xFFFFC107),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+    );
+  }
+
+  // ======================================================
+  // BUILD
+  // ======================================================
+
   @override
   Widget build(BuildContext context) {
 
@@ -54,14 +79,31 @@ class _CompareMarketPremiumScreenState
 
     final data = [...provider.totals];
 
+    if (data.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text("Compare Markets")),
+        body: Stack(
+          children: [
+            _buildTetBackground(),
+            const Center(
+              child: Text(
+                "Chưa có dữ liệu so sánh",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     data.sort((a, b) =>
     sortAsc
         ? a.totalCost.compareTo(b.totalCost)
         : b.totalCost.compareTo(a.totalCost)
     );
 
-    final cheapest = data.isEmpty ? null : data.first;
-    final expensive = data.isEmpty ? null : data.last;
+    final cheapest = data.first;
+    final expensive = data.last;
 
     return Scaffold(
       appBar: AppBar(
@@ -76,40 +118,41 @@ class _CompareMarketPremiumScreenState
         ],
       ),
 
-      body: FadeTransition(
-        opacity: controller,
-        child: Column(
-          children: [
+      body: Stack(
+        children: [
 
-            /// ===== INSIGHT =====
-            if (cheapest != null && expensive != null)
-              _buildInsight(cheapest, expensive),
+          _buildTetBackground(),
 
-            /// ===== CHART =====
-            SizedBox(
-              height: 240,
-              child: _buildChart(data, cheapest?.marketName),
+          FadeTransition(
+            opacity: controller,
+            child: Column(
+              children: [
+
+                _buildInsight(cheapest, expensive),
+
+                SizedBox(
+                  height: 240,
+                  child: _buildChart(data, cheapest.marketName),
+                ),
+
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: data.length,
+                    itemBuilder: (_, i) =>
+                        _buildMarketCard(data[i], i, cheapest),
+                  ),
+                ),
+              ],
             ),
-
-            /// ===== LIST =====
-            Expanded(
-              child: ListView.builder(
-                itemCount: data.length,
-                itemBuilder: (_, i) {
-                  final item = data[i];
-                  return _buildMarketCard(item, i, cheapest);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  // ---------------------------------------------------
-  // INSIGHT BOX
-  // ---------------------------------------------------
+  // ======================================================
+  // 💡 INSIGHT
+  // ======================================================
 
   Widget _buildInsight(
       MarketTotalCost cheapest,
@@ -154,21 +197,26 @@ class _CompareMarketPremiumScreenState
     );
   }
 
-  // ---------------------------------------------------
-  // BAR CHART
-  // ---------------------------------------------------
+  // ======================================================
+  // 📊 CHART
+  // ======================================================
 
   Widget _buildChart(
       List<MarketTotalCost> data,
-      String? cheapestMarket,
+      String cheapestMarket,
       ) {
+
+    final maxValue =
+    data.map((e) => e.totalCost).reduce(max);
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: BarChart(
         BarChartData(
+          maxY: maxValue * 1.2,
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(show: false),
+
           barGroups: data.asMap().entries.map((entry) {
 
             final index = entry.key;
@@ -198,14 +246,14 @@ class _CompareMarketPremiumScreenState
     );
   }
 
-  // ---------------------------------------------------
-  // MARKET CARD
-  // ---------------------------------------------------
+  // ======================================================
+  // 🏪 MARKET CARD
+  // ======================================================
 
   Widget _buildMarketCard(
       MarketTotalCost market,
       int index,
-      MarketTotalCost? cheapest,
+      MarketTotalCost cheapest,
       ) {
 
     final currency = NumberFormat.currency(
@@ -214,12 +262,13 @@ class _CompareMarketPremiumScreenState
       decimalDigits: 0,
     );
 
-    final isBest = market.marketName == cheapest?.marketName;
+    final isBest = market.marketName == cheapest.marketName;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
+
       decoration: BoxDecoration(
         gradient: isBest
             ? const LinearGradient(

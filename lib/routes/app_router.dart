@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../presentation/args/item_price_args.dart';
+import '../presentation/screens/compare/compare_market_premium_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/items/add_item_screen.dart';
 import '../presentation/screens/items/edit_item_screen.dart';
@@ -62,6 +63,12 @@ class AppRouter {
             itemName: args.itemName,
           ),
         );
+
+      case '/compare-market':
+        return MaterialPageRoute(
+          builder: (_) => const CompareMarketPremiumScreen(),
+        );
+
 
       default:
         return MaterialPageRoute(

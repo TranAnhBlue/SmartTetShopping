@@ -109,6 +109,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     value: 3,
                     child: Text("Trang trí"),
                   ),
+                  DropdownMenuItem(
+                    value: 4,
+                    child: Text("Đồ uống"),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() {

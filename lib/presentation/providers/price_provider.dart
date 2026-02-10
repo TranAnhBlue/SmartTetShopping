@@ -24,8 +24,11 @@ class PriceProvider extends ChangeNotifier {
       this.totalUsecase,
       );
 
+  // ================= STATE =================
+
   List<MarketPrice> prices = [];
   CheapestMarket? cheapestMarket;
+
   List<MarketTotalCost> totals = [];
 
   bool isLoading = false;
@@ -33,7 +36,9 @@ class PriceProvider extends ChangeNotifier {
 
   int? _currentItemId;
 
-  // ================= LOAD ITEM PRICES =================
+  // ===================================================
+  // LOAD ITEM PRICES
+  // ===================================================
   Future<void> loadPrices(int itemId) async {
 
     try {
@@ -44,8 +49,11 @@ class PriceProvider extends ChangeNotifier {
       error = null;
       notifyListeners();
 
-      prices = await getPricesUsecase(itemId);
-      cheapestMarket = await cheapestUsecase(itemId);
+      final resultPrices = await getPricesUsecase(itemId);
+      final cheapest = await cheapestUsecase(itemId);
+
+      prices = resultPrices;
+      cheapestMarket = cheapest;
 
     } catch (e) {
 
@@ -58,12 +66,15 @@ class PriceProvider extends ChangeNotifier {
     }
   }
 
-  // ================= LOAD DASHBOARD =================
+  // ===================================================
+  // LOAD MARKET TOTALS (COMPARE SCREEN)
+  // ===================================================
   Future<void> loadMarketTotals() async {
 
     try {
 
       isLoading = true;
+      error = null;
       notifyListeners();
 
       totals = await totalUsecase();
@@ -79,14 +90,62 @@ class PriceProvider extends ChangeNotifier {
     }
   }
 
-  // ================= ADD PRICE =================
+  // ===================================================
+  // SORT TOTALS
+  // ===================================================
+  List<MarketTotalCost> getTotalsSorted({bool asc = true}) {
+
+    final list = [...totals];
+
+    list.sort((a, b) =>
+    asc
+        ? a.totalCost.compareTo(b.totalCost)
+        : b.totalCost.compareTo(a.totalCost)
+    );
+
+    return list;
+  }
+
+  // ===================================================
+  // GET CHEAPEST MARKET TOTAL
+  // ===================================================
+  MarketTotalCost? get cheapestMarketTotal {
+
+    if (totals.isEmpty) return null;
+
+    final sorted = getTotalsSorted(asc: true);
+
+    return sorted.first;
+  }
+
+  // ===================================================
+  // ADD PRICE
+  // ===================================================
   Future<void> addPrice(ItemPrice price) async {
 
-    await addPriceUsecase(price);
+    try {
 
-    /// ⭐ reload lại data sau khi thêm
-    if (_currentItemId != null) {
-      await loadPrices(_currentItemId!);
+      await addPriceUsecase(price);
+
+      /// reload item price
+      if (_currentItemId != null) {
+        await loadPrices(_currentItemId!);
+      }
+
+      /// reload dashboard totals
+      await loadMarketTotals();
+
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
     }
+  }
+
+  // ===================================================
+  // CLEAR ERROR
+  // ===================================================
+  void clearError() {
+    error = null;
+    notifyListeners();
   }
 }
