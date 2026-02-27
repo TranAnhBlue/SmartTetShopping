@@ -1,8 +1,8 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'dart:math';
 
 import '../../../domain/entities/market_total_cost.dart';
 import '../../providers/price_provider.dart';
@@ -11,8 +11,8 @@ class CompareMarketPremiumScreen extends StatefulWidget {
   const CompareMarketPremiumScreen({super.key});
 
   @override
-  State<CompareMarketPremiumScreen> createState() =>
-      _CompareMarketPremiumScreenState();
+  State<CompareMarketPremiumScreen> createState()
+  => _CompareMarketPremiumScreenState();
 }
 
 class _CompareMarketPremiumScreenState
@@ -31,7 +31,9 @@ class _CompareMarketPremiumScreenState
       duration: const Duration(milliseconds: 800),
     )..forward();
 
-    Future.microtask(() {
+    /// load data sau khi build xong
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       context.read<PriceProvider>().loadMarketTotals();
     });
   }
@@ -41,10 +43,6 @@ class _CompareMarketPremiumScreenState
     controller.dispose();
     super.dispose();
   }
-
-  // ======================================================
-  // 🎆 TẾT BACKGROUND
-  // ======================================================
 
   Widget _buildTetBackground() {
     return Container(
@@ -62,18 +60,20 @@ class _CompareMarketPremiumScreenState
     );
   }
 
-  // ======================================================
-  // BUILD
-  // ======================================================
-
   @override
   Widget build(BuildContext context) {
 
     final provider = context.watch<PriceProvider>();
 
     if (provider.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        appBar: AppBar(title: const Text("📊 Compare Markets")),
+        body: Stack(
+          children: [
+            _buildTetBackground(),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ),
       );
     }
 
@@ -81,7 +81,7 @@ class _CompareMarketPremiumScreenState
 
     if (data.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Compare Markets")),
+        appBar: AppBar(title: const Text("📊 Compare Markets")),
         body: Stack(
           children: [
             _buildTetBackground(),
@@ -99,8 +99,7 @@ class _CompareMarketPremiumScreenState
     data.sort((a, b) =>
     sortAsc
         ? a.totalCost.compareTo(b.totalCost)
-        : b.totalCost.compareTo(a.totalCost)
-    );
+        : b.totalCost.compareTo(a.totalCost));
 
     final cheapest = data.first;
     final expensive = data.last;
@@ -117,7 +116,6 @@ class _CompareMarketPremiumScreenState
           )
         ],
       ),
-
       body: Stack(
         children: [
 
@@ -150,9 +148,7 @@ class _CompareMarketPremiumScreenState
     );
   }
 
-  // ======================================================
-  // 💡 INSIGHT
-  // ======================================================
+  // ================= INSIGHT =================
 
   Widget _buildInsight(
       MarketTotalCost cheapest,
@@ -160,7 +156,6 @@ class _CompareMarketPremiumScreenState
       ) {
 
     final diff = expensive.totalCost - cheapest.totalCost;
-    final percent = (diff / expensive.totalCost) * 100;
 
     final currency = NumberFormat.currency(
       locale: 'vi_VN',
@@ -177,29 +172,17 @@ class _CompareMarketPremiumScreenState
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        children: [
-          const Text(
-            "💡 Best Saving Opportunity",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            "Buy at ${cheapest.marketName} saves "
-                "${currency.format(diff)} (${percent.toStringAsFixed(1)}%)",
-            style: const TextStyle(color: Colors.white),
-          )
-        ],
+      child: Text(
+        "💡 Buy at ${cheapest.marketName} saves ${currency.format(diff)}",
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  // ======================================================
-  // 📊 CHART
-  // ======================================================
+  // ================= CHART =================
 
   Widget _buildChart(
       List<MarketTotalCost> data,
@@ -216,7 +199,6 @@ class _CompareMarketPremiumScreenState
           maxY: maxValue * 1.2,
           borderData: FlBorderData(show: false),
           titlesData: FlTitlesData(show: false),
-
           barGroups: data.asMap().entries.map((entry) {
 
             final index = entry.key;
@@ -246,9 +228,7 @@ class _CompareMarketPremiumScreenState
     );
   }
 
-  // ======================================================
-  // 🏪 MARKET CARD
-  // ======================================================
+  // ================= CARD =================
 
   Widget _buildMarketCard(
       MarketTotalCost market,
@@ -262,39 +242,30 @@ class _CompareMarketPremiumScreenState
       decimalDigits: 0,
     );
 
-    final isBest = market.marketName == cheapest.marketName;
+    final isBest =
+        market.marketName == cheapest.marketName;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      margin: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
-
       decoration: BoxDecoration(
-        gradient: isBest
-            ? const LinearGradient(
-          colors: [Colors.yellow, Colors.orange],
-        )
-            : const LinearGradient(
-          colors: [Colors.white, Colors.white],
-        ),
+        color: isBest ? Colors.yellow.shade200 : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8,
-            color: Colors.black.withOpacity(0.08),
-          )
-        ],
       ),
-
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
 
           Row(
             children: [
-              _buildRankIcon(index),
+              Icon(
+                index == 0
+                    ? Icons.emoji_events
+                    : Icons.store,
+                color: Colors.orange,
+              ),
               const SizedBox(width: 10),
-
               Text(
                 market.marketName,
                 style: const TextStyle(
@@ -314,19 +285,5 @@ class _CompareMarketPremiumScreenState
         ],
       ),
     );
-  }
-
-  Widget _buildRankIcon(int index) {
-
-    switch (index) {
-      case 0:
-        return const Icon(Icons.emoji_events, color: Colors.amber);
-      case 1:
-        return const Icon(Icons.emoji_events, color: Colors.grey);
-      case 2:
-        return const Icon(Icons.emoji_events, color: Colors.brown);
-      default:
-        return const Icon(Icons.store, color: Colors.red);
-    }
   }
 }

@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../data/local_db/database_helper.dart';
 
 import '../../domain/entities/market_price.dart';
 import '../../domain/entities/cheapest_market.dart';
@@ -28,7 +30,6 @@ class PriceProvider extends ChangeNotifier {
 
   List<MarketPrice> prices = [];
   CheapestMarket? cheapestMarket;
-
   List<MarketTotalCost> totals = [];
 
   bool isLoading = false;
@@ -40,14 +41,18 @@ class PriceProvider extends ChangeNotifier {
   // LOAD ITEM PRICES
   // ===================================================
   Future<void> loadPrices(int itemId) async {
-
     try {
-
       _currentItemId = itemId;
 
       isLoading = true;
       error = null;
       notifyListeners();
+
+      /// ⭐ AUTO GENERATE PRICE IF EMPTY
+      await DatabaseHelper.instance.generatePricesIfNeeded(
+        itemId,
+        30000, // fallback price
+      );
 
       final resultPrices = await getPricesUsecase(itemId);
       final cheapest = await cheapestUsecase(itemId);
@@ -56,35 +61,53 @@ class PriceProvider extends ChangeNotifier {
       cheapestMarket = cheapest;
 
     } catch (e) {
-
       error = e.toString();
-
     } finally {
-
       isLoading = false;
       notifyListeners();
     }
   }
 
   // ===================================================
-  // LOAD MARKET TOTALS (COMPARE SCREEN)
+  // ⭐ RANDOM MARKET TOTALS (NO DB REQUIRED)
   // ===================================================
   Future<void> loadMarketTotals() async {
 
     try {
 
       isLoading = true;
-      error = null;
       notifyListeners();
 
-      totals = await totalUsecase();
+      /// giả lập loading API
+      await Future.delayed(const Duration(milliseconds: 400));
+
+      final random = Random();
+
+      /// danh sách chợ / siêu thị
+      final markets = [
+        "Chợ Đồng Xuân",
+        "Vinmart",
+        "Big C",
+        "Co.opmart",
+        "Lotte Mart",
+      ];
+
+      totals = markets.map((market) {
+
+        /// tổng tiền random
+        final total =
+            200000 + random.nextInt(400000);
+
+        return MarketTotalCost(
+          marketName: market,
+          totalCost: total.toDouble(),
+        );
+
+      }).toList();
 
     } catch (e) {
-
       error = e.toString();
-
     } finally {
-
       isLoading = false;
       notifyListeners();
     }
@@ -100,8 +123,7 @@ class PriceProvider extends ChangeNotifier {
     list.sort((a, b) =>
     asc
         ? a.totalCost.compareTo(b.totalCost)
-        : b.totalCost.compareTo(a.totalCost)
-    );
+        : b.totalCost.compareTo(a.totalCost));
 
     return list;
   }
@@ -114,7 +136,6 @@ class PriceProvider extends ChangeNotifier {
     if (totals.isEmpty) return null;
 
     final sorted = getTotalsSorted(asc: true);
-
     return sorted.first;
   }
 
@@ -127,12 +148,10 @@ class PriceProvider extends ChangeNotifier {
 
       await addPriceUsecase(price);
 
-      /// reload item price
       if (_currentItemId != null) {
         await loadPrices(_currentItemId!);
       }
 
-      /// reload dashboard totals
       await loadMarketTotals();
 
     } catch (e) {
@@ -142,10 +161,37 @@ class PriceProvider extends ChangeNotifier {
   }
 
   // ===================================================
-  // CLEAR ERROR
-  // ===================================================
   void clearError() {
     error = null;
     notifyListeners();
   }
+
+  // ===================================================
+// BUYING SUGGESTION
+// ===================================================
+  String get buyingSuggestion {
+
+    if (prices.isEmpty || cheapestMarket == null) {
+      return "";
+    }
+
+    /// tìm giá cao nhất
+    final highest = prices.reduce(
+          (a, b) => a.price > b.price ? a : b,
+    );
+
+    final diff =
+        highest.price - cheapestMarket!.price;
+
+    return "Nên mua tại ${cheapestMarket!.marketName}"
+        " (rẻ hơn ${diff.toStringAsFixed(0)}đ)";
+  }
+
+  // ===================================================
+// CHECK CHEAPEST MARKET
+// ===================================================
+  bool isCheapest(String marketName) {
+    return cheapestMarket?.marketName == marketName;
+  }
+
 }

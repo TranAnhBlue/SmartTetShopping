@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../presentation/args/item_price_args.dart';
+import '../presentation/screens/ai/smart_shopping_ai_screen.dart';
 import '../presentation/screens/compare/compare_market_premium_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/items/add_item_screen.dart';
 import '../presentation/screens/items/edit_item_screen.dart';
 import '../presentation/screens/price/item_price_screen.dart';
-
+import '../presentation/screens/price/compare_price_screen.dart';
 import '../domain/entities/shopping_item.dart';
+
 
 class AppRouter {
 
@@ -69,6 +71,31 @@ class AppRouter {
           builder: (_) => const CompareMarketPremiumScreen(),
         );
 
+      case '/smart-ai':
+        return MaterialPageRoute(
+          builder: (_) => const SmartShoppingAIScreen(),
+        );
+
+
+    // /// ===== COMPARE PRICE =====
+    //   case '/compare-price':
+    //
+    //     if (settings.arguments is! ItemPriceArgs) {
+    //       return MaterialPageRoute(
+    //         builder: (_) => const Scaffold(
+    //           body: Center(child: Text("Invalid item data")),
+    //         ),
+    //       );
+    //     }
+    //
+    //     final args = settings.arguments as ItemPriceArgs;
+    //
+    //     return MaterialPageRoute(
+    //       builder: (_) => ComparePriceScreen(
+    //         itemId: args.itemId,
+    //         itemName: args.itemName,
+    //       ),
+    //     );
 
       default:
         return MaterialPageRoute(

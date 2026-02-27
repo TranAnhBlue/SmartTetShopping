@@ -46,11 +46,11 @@ class PriceRepositoryImpl implements PriceRepository {
     final result = await priceDao.getPricesWithMarket(itemId);
 
     return result.map((e) => MarketPrice(
-      id: e['id'],
-      itemId: e['item_id'],
-      marketId: e['market_id'],
-      marketName: e['market_name'],
-      price: e['price'],
+      id: (e['id'] as num).toInt(),
+      itemId: (e['item_id'] as num).toInt(),
+      marketId: (e['market_id'] as num).toInt(),
+      marketName: e['market_name'] as String,
+      price: (e['price'] as num).toDouble(),
     )).toList();
   }
 
@@ -63,8 +63,8 @@ class PriceRepositoryImpl implements PriceRepository {
     if (map == null) return null;
 
     return CheapestMarket(
-      marketName: map['market_name'],
-      price: map['price'],
+      marketName: map['market_name'] as String,
+      price: (map['price'] as num).toDouble(),
     );
   }
 
@@ -75,10 +75,8 @@ class PriceRepositoryImpl implements PriceRepository {
     final result = await priceDao.getTotalCostByMarket();
 
     return result.map((e) => MarketTotalCost(
-      marketName: e['market_name'],
-      totalCost: e['total_cost'],
+      marketName: e['market_name'] as String,
+      totalCost: (e['total_cost'] as num).toDouble(),
     )).toList();
   }
-
 }
-

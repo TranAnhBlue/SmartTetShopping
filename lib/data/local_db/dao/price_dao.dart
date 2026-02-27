@@ -92,4 +92,15 @@ class PriceDao {
     ORDER BY total_cost ASC
   ''');
   }
+
+  Future<List<Map<String, dynamic>>> getPricesByItem(int itemId) async {
+
+    final db = await DatabaseHelper.instance.database;
+
+    return await db.query(
+      'prices',
+      where: 'item_id = ?',
+      whereArgs: [itemId],
+    );
+  }
 }

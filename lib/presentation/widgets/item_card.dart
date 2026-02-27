@@ -22,15 +22,20 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final currency = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: '₫',
       decimalDigits: 0,
     );
 
-    final price = (cheapestMarket?['price'] as num?)?.toDouble()
-        ?? item.estimatedPrice;
+    /// giá ưu tiên từ market rẻ nhất
+    final price =
+        (cheapestMarket?['price'] as num?)?.toDouble()
+            ?? item.estimatedPrice;
 
+    final cheapestMarketName =
+    cheapestMarket?['market_name'];
 
     return Card(
       elevation: 3,
@@ -38,52 +43,123 @@ class ItemCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),
-      child: ListTile(
+
+      /// ⭐ dùng InkWell để có ripple effect
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
-        contentPadding: const EdgeInsets.all(16),
 
-        leading: CircleAvatar(
-          backgroundColor: Colors.red.shade100,
-          child: const Icon(Icons.shopping_basket, color: Colors.red),
-        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
 
-        title: Text(
-          item.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+          child: Row(
+            children: [
 
-        subtitle: Text(
-          "Giá: ${currency.format(price)}\n"
-              "Số lượng: ${item.quantity}",
-        ),
-
-        /// ⭐ trailing có edit + delete
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              currency.format(price * item.quantity),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
+              /// ICON
+              CircleAvatar(
+                backgroundColor: Colors.red.shade100,
+                child: const Icon(
+                  Icons.shopping_basket,
+                  color: Colors.red,
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: onEdit,
-                  child: const Icon(Icons.edit, size: 20),
+
+              const SizedBox(width: 12),
+
+              /// ===== INFO =====
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    /// tên sản phẩm
+                    Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    /// category
+                    Text(
+                      categoryName,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    /// giá + số lượng
+                    Text(
+                      "Giá: ${currency.format(price)}\n"
+                          "Số lượng: ${item.quantity}",
+                    ),
+
+                    ///  hiển thị nơi rẻ nhất (NEW)
+                    if (cheapestMarketName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          "💡 Rẻ nhất: $cheapestMarketName",
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: onDelete,
-                  child: const Icon(Icons.delete, size: 20, color: Colors.red),
-                ),
-              ],
-            ),
-          ],
+              ),
+
+              /// ===== RIGHT SIDE =====
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+
+                  /// tổng tiền
+                  Text(
+                    currency.format(price * item.quantity),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+
+                      /// EDIT
+                      InkWell(
+                        onTap: onEdit,
+                        child: const Icon(Icons.edit, size: 20),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      /// DELETE
+                      InkWell(
+                        onTap: onDelete,
+                        child: const Icon(
+                          Icons.delete,
+                          size: 20,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

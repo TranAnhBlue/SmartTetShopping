@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+
 import '../../data/local_db/dao/price_dao.dart';
 import '../../data/local_db/database_helper.dart';
+
 import '../../domain/entities/shopping_item.dart';
+import '../../domain/entities/category.dart';
+
 import '../../domain/usecases/item/add_item_usecase.dart';
 import '../../domain/usecases/item/delete_item_usecase.dart';
 import '../../domain/usecases/item/get_items_usecase.dart';
 import '../../domain/usecases/item/update_item_usecase.dart';
-import '../../domain/entities/category.dart';
+import '../../domain/usecases/price/get_cheapest_market_usecase.dart';
+import '../../domain/usecases/price/get_prices_with_market_usecase.dart';
+import '../../domain/usecases/price/get_total_cost_by_market_usecase.dart';
 
 class ShoppingProvider extends ChangeNotifier {
 
@@ -15,6 +21,10 @@ class ShoppingProvider extends ChangeNotifier {
   final UpdateItemUsecase updateItemUsecase;
   final DeleteItemUsecase deleteItemUsecase;
 
+  final GetPricesWithMarketUsecase _getPrices;
+  final GetCheapestMarketUsecase _getCheapest;
+  final GetTotalCostByMarketUsecase _getTotalCost;
+
   final PriceDao priceDao = PriceDao();
 
   ShoppingProvider(
@@ -22,47 +32,52 @@ class ShoppingProvider extends ChangeNotifier {
       this.getItemsUsecase,
       this.updateItemUsecase,
       this.deleteItemUsecase,
+      this._getPrices,
+      this._getCheapest,
+      this._getTotalCost
       );
 
-  /// ===============================
+  /// =====================================================
   /// STATE
-  /// ===============================
+  /// =====================================================
 
   List<ShoppingItem> items = [];
-
-  /// ⭐ FIX TYPE
   List<Category> categories = [];
 
   int? selectedCategoryId;
 
-  Map<int, Map<String, dynamic>?> cheapestMarkets = {};
+  /// itemId -> cheapest market
+  final Map<int, Map<String, dynamic>?> cheapestMarkets = {};
+
+  /// itemId -> all prices
+  final Map<int, List<Map<String, dynamic>>> itemPrices = {};
+
+  /// tránh generate nhiều lần
+  final Set<int> _generatedItems = {};
 
   bool isLoading = false;
 
-  /// ===============================
+  /// =====================================================
   /// FILTERED ITEMS
-  /// ===============================
-  List<ShoppingItem> get filteredItems {
+  /// =====================================================
 
+  List<ShoppingItem> get filteredItems {
     if (selectedCategoryId == null) return items;
 
     return items
-        .where((item) => item.categoryId == selectedCategoryId)
+        .where((e) => e.categoryId == selectedCategoryId)
         .toList();
   }
 
-  /// ===============================
-  /// SET CATEGORY FILTER
-  /// ===============================
   void setCategoryFilter(int? categoryId) {
-
     selectedCategoryId = categoryId;
     notifyListeners();
   }
 
-  /// ===============================
-  /// LOAD ITEMS + CHEAPEST MARKET
-  /// ===============================
+  /// =====================================================
+  /// LOAD ITEMS
+  /// =====================================================
+
   Future<void> loadItems() async {
 
     isLoading = true;
@@ -76,38 +91,36 @@ class ShoppingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ===============================
+  /// =====================================================
   /// LOAD CHEAPEST MARKETS
-  /// ===============================
+  /// =====================================================
+
   Future<void> _loadCheapestMarkets() async {
 
     cheapestMarkets.clear();
 
-    await Future.wait(
-      items.map((item) async {
+    for (final item in items) {
 
-        if (item.id == null) return;
+      if (item.id == null) continue;
 
-        final cheapest = await priceDao.getCheapestMarket(item.id!);
+      final cheapest =
+      await priceDao.getCheapestMarket(item.id!);
 
-        cheapestMarkets[item.id!] = cheapest;
-      }),
-    );
+      cheapestMarkets[item.id!] = cheapest;
+    }
   }
 
-  /// ===============================
+  /// =====================================================
   /// LOAD CATEGORIES
-  /// ===============================
-  Future<void> loadCategories() async {
+  /// =====================================================
 
-    categories = await DatabaseHelper.instance.getCategories();
+  Future<void> loadCategories() async {
+    categories =
+    await DatabaseHelper.instance.getCategories();
 
     notifyListeners();
   }
 
-  /// ===============================
-  /// GET CATEGORY NAME
-  /// ===============================
   String getCategoryName(int? categoryId) {
 
     if (categoryId == null) return "Unknown";
@@ -120,9 +133,10 @@ class ShoppingProvider extends ChangeNotifier {
     return cat.name;
   }
 
-  /// ===============================
-  /// ADD ITEM
-  /// ===============================
+  /// =====================================================
+  /// CRUD ITEM
+  /// =====================================================
+
   Future<void> addItem(
       String name,
       double price,
@@ -138,13 +152,9 @@ class ShoppingProvider extends ChangeNotifier {
     );
 
     await addItemUsecase(item);
-
     await loadItems();
   }
 
-  /// ===============================
-  /// UPDATE ITEM
-  /// ===============================
   Future<void> updateItem(ShoppingItem item) async {
 
     await updateItemUsecase(item);
@@ -156,7 +166,6 @@ class ShoppingProvider extends ChangeNotifier {
     }
 
     if (item.id != null) {
-
       cheapestMarkets[item.id!] =
       await priceDao.getCheapestMarket(item.id!);
     }
@@ -164,9 +173,6 @@ class ShoppingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// ===============================
-  /// DELETE ITEM
-  /// ===============================
   Future<void> deleteItem(int id) async {
 
     await deleteItemUsecase(id);
@@ -174,13 +180,16 @@ class ShoppingProvider extends ChangeNotifier {
     items.removeWhere((e) => e.id == id);
 
     cheapestMarkets.remove(id);
+    itemPrices.remove(id);
+    _generatedItems.remove(id);
 
     notifyListeners();
   }
 
-  /// ===============================
+  /// =====================================================
   /// TOTAL COST
-  /// ===============================
+  /// =====================================================
+
   double getTotalEstimatedCost() {
 
     double total = 0;
@@ -191,11 +200,72 @@ class ShoppingProvider extends ChangeNotifier {
 
       final cheapest = cheapestMarkets[item.id!];
 
-      final price = cheapest?['price'] ?? item.estimatedPrice;
+      final price =
+          cheapest?['price'] ?? item.estimatedPrice;
 
       total += price * item.quantity;
     }
 
     return total;
   }
+
+  /// =====================================================
+  /// ⭐ AUTO GENERATE + LOAD PRICES
+  /// =====================================================
+
+  Future<void> loadItemPrices(int itemId) async {
+
+    final item = items.firstWhere((e) => e.id == itemId);
+
+    /// luôn đảm bảo có price
+    await DatabaseHelper.instance.seedPricesForItem(
+      itemId,
+      item.estimatedPrice,
+    );
+
+    final prices =
+    await priceDao.getPricesByItem(itemId);
+
+    itemPrices[itemId] = prices;
+
+    await findCheapestMarket(itemId);
+
+    notifyListeners();
+  }
+
+  /// =====================================================
+  /// FIND CHEAPEST
+  /// =====================================================
+
+  Future<void> findCheapestMarket(int itemId) async {
+
+    final prices = itemPrices[itemId];
+
+    if (prices == null || prices.isEmpty) {
+      cheapestMarkets[itemId] = null;
+      return;
+    }
+
+    prices.sort(
+          (a, b) =>
+          (a['price'] as num)
+              .compareTo(b['price'] as num),
+    );
+
+    cheapestMarkets[itemId] = prices.first;
+  }
+
+  /// =====================================================
+  /// USER TAP ITEM
+  /// =====================================================
+
+  Future<void> openItemPrice(ShoppingItem item) async {
+
+    if (item.id == null) return;
+    if (itemPrices.containsKey(item.id)) return;
+
+    await loadItemPrices(item.id!);
+  }
+
+
 }

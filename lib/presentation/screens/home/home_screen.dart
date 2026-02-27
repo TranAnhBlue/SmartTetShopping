@@ -7,6 +7,7 @@ import '../../args/item_price_args.dart';
 import '../../providers/shopping_provider.dart';
 import '../../widgets/item_card.dart';
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -346,11 +347,22 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: const Text("🎆 Smart Tết Shopping"),
         actions: [
+
+          /// 📊 Compare Market
           IconButton(
             icon: const Icon(Icons.bar_chart),
+            tooltip: "So sánh chợ",
             onPressed: () =>
                 Navigator.pushNamed(context, '/compare-market'),
-          )
+          ),
+
+          /// 🤖 SMART SHOPPING AI
+          IconButton(
+            icon: const Icon(Icons.auto_awesome),
+            tooltip: "Smart Shopping AI",
+            onPressed: () =>
+                Navigator.pushNamed(context, '/smart-ai'),
+          ),
         ],
       ),
 
@@ -394,7 +406,32 @@ class _HomeScreenState extends State<HomeScreen>
                             cheapestMarket: item.id == null
                                 ? null
                                 : provider.cheapestMarkets[item.id!],
-                            onTap: () {
+                            onTap: () async {
+
+                              final provider = context.read<ShoppingProvider>();
+
+                              /// loading nhỏ
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+
+                              try {
+
+                                /// ✅ chỉ cần 1 hàm duy nhất
+                                await provider.openItemPrice(item);
+
+                              } catch (e) {
+                                debugPrint("Compare price error: $e");
+                              }
+
+                              if (!context.mounted) return;
+
+                              Navigator.pop(context);
+
                               Navigator.pushNamed(
                                 context,
                                 '/item-price',
