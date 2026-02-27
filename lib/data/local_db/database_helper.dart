@@ -25,12 +25,19 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 1,
+      version: 2,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _createDB,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await _createLuckyMoneyTable(db);
+    }
   }
 
   Future<void> deleteDB() async {
@@ -87,6 +94,8 @@ class DatabaseHelper {
       )
     ''');
 
+    await _createLuckyMoneyTable(db);
+
     await _seedCategories(db);
     await _seedMarkets(db);
     await _seedItems(db); // ⭐ nhiều sản phẩm
@@ -108,6 +117,20 @@ class DatabaseHelper {
     for (var c in categories) {
       await db.insert('categories', c);
     }
+  }
+
+  Future<void> _createLuckyMoneyTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE lucky_money(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        recipient TEXT NOT NULL,
+        amount REAL NOT NULL,
+        group_name TEXT NOT NULL,
+        is_prepared INTEGER NOT NULL DEFAULT 0,
+        is_gave INTEGER NOT NULL DEFAULT 0,
+        note TEXT
+      )
+    ''');
   }
 
   // ======================================================

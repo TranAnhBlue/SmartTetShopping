@@ -29,6 +29,7 @@ import 'domain/usecases/price/get_total_cost_by_market_usecase.dart';
 /// Providers
 import 'presentation/providers/shopping_provider.dart';
 import 'presentation/providers/price_provider.dart';
+import 'presentation/providers/lucky_money_provider.dart';
 
 /// ⭐ Web SQLite
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -104,6 +105,11 @@ Future<void> main() async {
             cheapestUsecase,
             totalUsecase,
           ),
+        ),
+
+        /// LUCKY MONEY PROVIDER
+        ChangeNotifierProvider(
+          create: (_) => LuckyMoneyProvider()..loadLuckyMoney(),
         ),
       ],
       child: const MyApp(),
