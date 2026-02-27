@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
+import 'core/utils/notification_service.dart';
+import 'core/utils/location_service.dart';
 
 import 'app.dart';
 
@@ -33,6 +35,10 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  /// ⭐ Init Services (Non-blocking)
+  NotificationService().init().catchError((e) => debugPrint("Notification init error: $e"));
+  LocationService().init().catchError((e) => debugPrint("Location init error: $e"));
 
   /// ⭐ fix SQLite Web
   // if (kIsWeb) {

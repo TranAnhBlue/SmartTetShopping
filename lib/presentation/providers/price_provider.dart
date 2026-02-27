@@ -78,32 +78,9 @@ class PriceProvider extends ChangeNotifier {
       isLoading = true;
       notifyListeners();
 
-      /// giả lập loading API
-      await Future.delayed(const Duration(milliseconds: 400));
-
-      final random = Random();
-
-      /// danh sách chợ / siêu thị
-      final markets = [
-        "Chợ Đồng Xuân",
-        "Vinmart",
-        "Big C",
-        "Co.opmart",
-        "Lotte Mart",
-      ];
-
-      totals = markets.map((market) {
-
-        /// tổng tiền random
-        final total =
-            200000 + random.nextInt(400000);
-
-        return MarketTotalCost(
-          marketName: market,
-          totalCost: total.toDouble(),
-        );
-
-      }).toList();
+      /// ⭐ FETCH REAL TOTALS FROM DB
+      final result = await totalUsecase();
+      totals = result;
 
     } catch (e) {
       error = e.toString();

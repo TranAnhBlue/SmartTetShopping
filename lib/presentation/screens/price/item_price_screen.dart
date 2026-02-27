@@ -68,21 +68,28 @@ class _ItemPriceScreenState extends State<ItemPriceScreen> {
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green),
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.red.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                )
+              ],
             ),
             child: Row(
               children: [
-                const Icon(Icons.lightbulb,
-                    color: Colors.green),
+                const Icon(Icons.stars, color: Colors.orange),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    provider.buyingSuggestion,
+                    "Mẹo: Mua tại ${provider.cheapestMarket!.marketName} để có giá tốt nhất!",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                      fontSize: 16,
+                      color: Colors.red,
                     ),
                   ),
                 ),

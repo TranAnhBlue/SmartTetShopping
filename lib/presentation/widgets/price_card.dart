@@ -16,13 +16,15 @@ class PriceCard extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Card(
-      color: isCheapest ? Colors.green.shade100 : null,
       child: ListTile(
-        title: Text(price.marketName),
-        subtitle: Text("Giá: ${price.price} đ"),
+        title: Text(
+          price.marketName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text("Giá: ${price.price.toStringAsFixed(0)} đ"),
         trailing: isCheapest
-            ? const Icon(Icons.star, color: Colors.green)
-            : null,
+            ? const Icon(Icons.check_circle, color: Colors.green)
+            : const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
       ),
     );
   }

@@ -155,6 +155,21 @@ class ShoppingProvider extends ChangeNotifier {
     await loadItems();
   }
 
+  Future<void> addItemsBatch(List<ShoppingItem> newItems) async {
+    for (final item in newItems) {
+      await addItemUsecase(item);
+    }
+    await loadItems();
+  }
+
+  int getCategoryIdByName(String name) {
+    final cat = categories.firstWhere(
+      (e) => e.name.toLowerCase().contains(name.toLowerCase()),
+      orElse: () => categories.isNotEmpty ? categories.first : Category(id: 1, name: "Thực phẩm"),
+    );
+    return cat.id ?? 1;
+  }
+
   Future<void> updateItem(ShoppingItem item) async {
 
     await updateItemUsecase(item);

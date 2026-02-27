@@ -55,13 +55,13 @@ class PriceDao {
         p.id,
         p.item_id,
         p.market_id,
-        p.price,
-        p.updated_at,
+        MIN(p.price) as price,
         m.name AS market_name
       FROM item_prices p
       JOIN markets m ON p.market_id = m.id
       WHERE p.item_id = ?
-      ORDER BY p.price ASC
+      GROUP BY m.id
+      ORDER BY price ASC
     ''', [itemId]);
   }
 
@@ -69,13 +69,17 @@ class PriceDao {
     final db = await dbHelper.database;
 
     final result = await db.rawQuery('''
-    SELECT m.name as market_name, MIN(p.price) as cheapest_price
+    SELECT m.name as market_name, p.price
     FROM item_prices p
     JOIN markets m ON p.market_id = m.id
     WHERE p.item_id = ?
+    ORDER BY p.price ASC
+    LIMIT 1
   ''', [itemId]);
 
-    return result.isNotEmpty ? result.first : null;
+    if (result.isEmpty) return null;
+
+    return result.first;
   }
 
   Future<List<Map<String, dynamic>>> getTotalCostByMarket() async {
@@ -87,7 +91,7 @@ class PriceDao {
       SUM(p.price * i.quantity) AS total_cost
     FROM item_prices p
     JOIN markets m ON p.market_id = m.id
-    JOIN shopping_items i ON p.item_id = i.id
+    JOIN items i ON p.item_id = i.id
     GROUP BY m.name
     ORDER BY total_cost ASC
   ''');
@@ -98,7 +102,7 @@ class PriceDao {
     final db = await DatabaseHelper.instance.database;
 
     return await db.query(
-      'prices',
+      'item_prices',
       where: 'item_id = ?',
       whereArgs: [itemId],
     );

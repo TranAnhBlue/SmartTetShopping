@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 import '../../args/item_price_args.dart';
 import '../../providers/shopping_provider.dart';
 import '../../widgets/item_card.dart';
+import '../../widgets/tet_countdown.dart';
+import '../../widgets/spending_dashboard.dart';
+import '../../../core/utils/location_service.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -144,9 +147,9 @@ class _HomeScreenState extends State<HomeScreen>
             angle: progress * 2 * pi,
             child: Transform.scale(
               scale: 0.8 + progress * 0.4,
-              child: const Text(
+              child: Text(
                 "🌸",
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: 24, color: Colors.white.withOpacity(0.6)),
               ),
             ),
           ),
@@ -160,85 +163,46 @@ class _HomeScreenState extends State<HomeScreen>
   // =====================================================
 
   Widget _buildTetBanner() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.red, Colors.orange],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 12,
-            color: Colors.black.withOpacity(0.2),
-          )
-        ],
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("🧧", style: TextStyle(fontSize: 28)),
-          SizedBox(width: 10),
-          Text(
-            "Chúc Mừng Năm Mới 2026",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  // =====================================================
-  // SUMMARY CARD
-  // =====================================================
-
-  Widget _buildSummary(double total) {
-
-    final currency = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE53935), Color(0xFFEF5350)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 15,
-            color: Colors.black.withOpacity(0.25),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            "Tổng chi phí dự kiến",
-            style: TextStyle(color: Colors.white70),
+    return GestureDetector(
+      onTap: () {
+        // ⭐ Mock trigger for review: check proximity to a specific point (e.g., center of Hanoi)
+        // In a real scenario, this would be a background task.
+        LocationService().checkProximity(21.0285, 105.8542, "Chợ Đồng Xuân");
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Colors.red, Colors.orange],
           ),
-          const SizedBox(height: 6),
-          Text(
-            currency.format(total),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          )
-        ],
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 12,
+              color: Colors.black.withOpacity(0.2),
+            )
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("🧧", style: TextStyle(fontSize: 28)),
+            SizedBox(width: 10),
+            Text(
+              "Chúc Mừng Năm Mới 2026",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
+
 
   // =====================================================
   // CATEGORY FILTER
@@ -381,84 +345,92 @@ class _HomeScreenState extends State<HomeScreen>
           provider.isLoading
               ? const Center(child: CircularProgressIndicator())
               : Column(
-            children: [
-
-              _buildTetBanner(),
-              _buildSummary(total),
-              const SizedBox(height: 12),
-              _buildCategoryFilter(provider),
-
-              Expanded(
-                child: Column(
                   children: [
-
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: pagedItems.length,
-                        itemBuilder: (_, i) {
-
-                          final item = pagedItems[i];
-
-                          return ItemCard(
-                            item: item,
-                            categoryName:
-                            provider.getCategoryName(item.categoryId),
-                            cheapestMarket: item.id == null
-                                ? null
-                                : provider.cheapestMarkets[item.id!],
-                            onTap: () async {
-
-                              final provider = context.read<ShoppingProvider>();
-
-                              /// loading nhỏ
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                builder: (_) => const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-
-                              try {
-
-                                /// ✅ chỉ cần 1 hàm duy nhất
-                                await provider.openItemPrice(item);
-
-                              } catch (e) {
-                                debugPrint("Compare price error: $e");
-                              }
-
-                              if (!context.mounted) return;
-
-                              Navigator.pop(context);
-
-                              Navigator.pushNamed(
-                                context,
-                                '/item-price',
-                                arguments: ItemPriceArgs(
-                                  itemId: item.id!,
-                                  itemName: item.name,
-                                ),
-                              );
-                            },
-                            onEdit: () =>
-                                Navigator.pushNamed(
-                                    context,
-                                    '/edit-item',
-                                    arguments: item),
-                            onDelete: () =>
-                                provider.deleteItem(item.id!),
-                          );
-                        },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            _buildTetBanner(),
+                            const TetCountdown(),
+                            const SpendingDashboard(),
+                            const SizedBox(height: 12),
+                            _buildCategoryFilter(provider),
+                          ],
+                        ),
                       ),
                     ),
 
-                    _buildPagination(provider.filteredItems.length),
+                    Expanded(
+                      child: Column(
+                        children: [
+
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: pagedItems.length,
+                              itemBuilder: (_, i) {
+
+                                final item = pagedItems[i];
+
+                                return ItemCard(
+                                  item: item,
+                                  categoryName:
+                                  provider.getCategoryName(item.categoryId),
+                                  cheapestMarket: item.id == null
+                                      ? null
+                                      : provider.cheapestMarkets[item.id!],
+                                  onTap: () async {
+
+                                    final provider = context.read<ShoppingProvider>();
+
+                                    /// loading nhỏ
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+
+                                    try {
+
+                                      /// ✅ chỉ cần 1 hàm duy nhất
+                                      await provider.openItemPrice(item);
+
+                                    } catch (e) {
+                                      debugPrint("Compare price error: $e");
+                                    }
+
+                                    if (!context.mounted) return;
+
+                                    Navigator.pop(context);
+
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/item-price',
+                                      arguments: ItemPriceArgs(
+                                        itemId: item.id!,
+                                        itemName: item.name,
+                                      ),
+                                    );
+                                  },
+                                  onEdit: () =>
+                                      Navigator.pushNamed(
+                                          context,
+                                          '/edit-item',
+                                          arguments: item),
+                                  onDelete: () =>
+                                      provider.deleteItem(item.id!),
+                                );
+                              },
+                            ),
+                          ),
+
+                          _buildPagination(provider.filteredItems.length),
+                        ],
+                      ),
+                    )
                   ],
-                ),
-              )
-            ],
-          )
+                )
         ],
       ),
     );
