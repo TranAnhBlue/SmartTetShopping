@@ -47,7 +47,7 @@ dependencies:
   geolocator: ^13.0.1
   flutter_local_notifications: ^17.1.2
   google_generative_ai: ^0.4.7
-  image_picker: ^1.1.2
+  image_picker: ^1.2.1
   google_mlkit_text_recognition: ^0.13.0
 
   # The following adds the Cupertino Icons font to your application.
@@ -55,6 +55,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   url_launcher: ^6.3.2
   webview_flutter: ^4.13.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../presentation/args/item_price_args.dart';
+import '../presentation/screens/ai/ocr_scanner_screen.dart';
 import '../presentation/screens/ai/smart_shopping_ai_screen.dart';
 import '../presentation/screens/compare/compare_market_premium_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
@@ -40,6 +41,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const CompareMarketPremiumScreen());
       case '/smart-ai':
         return MaterialPageRoute(builder: (_) => const SmartShoppingAIScreen());
+      case '/ocr-scanner':
+        return MaterialPageRoute(builder: (_) => const OCRScannerScreen());
       case '/lucky-money':
         return MaterialPageRoute(builder: (_) => const LuckyMoneyScreen());
       case '/greetings':

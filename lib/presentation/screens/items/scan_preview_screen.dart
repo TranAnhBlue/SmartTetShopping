@@ -18,11 +18,20 @@ class _ScanPreviewScreenState extends State<ScanPreviewScreen> {
   @override
   void initState() {
     super.initState();
-    // Create a mutable copy and add a selected flag
-    items = widget.scannedItems.map((item) => {
-      ...item,
-      'selected': true,
-      'categoryId': 1, // Default to Thực phẩm
+    // Create a mutable copy and handle Gemini field names
+    items = widget.scannedItems.map((item) {
+      final String name = item['name'] ?? 'Sản phẩm mới';
+      final double price = (item['estimated_price'] ?? item['price'] ?? 0.0).toDouble();
+      final int qty = (item['quantity'] ?? 1).toInt();
+      final String catName = item['category'] ?? 'Thực phẩm';
+      
+      return {
+        'name': name,
+        'price': price,
+        'quantity': qty,
+        'selected': true,
+        'categoryId': context.read<ShoppingProvider>().getCategoryIdByName(catName),
+      };
     }).toList();
   }
 

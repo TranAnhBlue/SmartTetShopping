@@ -125,8 +125,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Row(
         children: [
           _buildActionItem("Lì xì 💸", Colors.orange, () => Navigator.pushNamed(context, '/lucky-money')),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           _buildActionItem("Lời chúc 💌", Colors.blue, () => Navigator.pushNamed(context, '/greetings')),
+          const SizedBox(width: 8),
+          _buildActionItem("Quét đơn 📸", Colors.green, () => Navigator.pushNamed(context, '/ocr-scanner')),
         ],
       ),
     );
@@ -137,14 +139,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.9),
             borderRadius: BorderRadius.circular(15),
             boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))],
           ),
           child: Center(
-            child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
           ),
         ),
       ),
@@ -207,6 +214,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         actions: [
           IconButton(icon: const Icon(Icons.bar_chart), tooltip: "So sánh chợ", onPressed: () => Navigator.pushNamed(context, '/compare-market')),
           IconButton(icon: const Icon(Icons.auto_awesome), tooltip: "Smart Shopping AI", onPressed: () => Navigator.pushNamed(context, '/smart-ai')),
+          IconButton(icon: const Icon(Icons.document_scanner), tooltip: "Quét hóa đơn", onPressed: () => Navigator.pushNamed(context, '/ocr-scanner')),
         ],
       ),
       floatingActionButton: FloatingActionButton(backgroundColor: Colors.red, child: const Icon(Icons.add), onPressed: () => Navigator.pushNamed(context, "/add-item")),

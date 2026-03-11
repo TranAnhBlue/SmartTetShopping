@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../constants/app_constants.dart';
 
@@ -51,6 +52,47 @@ class AIService {
     } catch (e) {
       print("Gemini AI Error: $e");
       return _generateFallbackList(query);
+    }
+  }
+
+  /// Analyzes a receipt image and extracts shopping items
+  Future<List<Map<String, dynamic>>> analyzeReceipt(Uint8List imageBytes) async {
+    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+      throw Exception("Vui lòng cài đặt Gemini API Key để sử dụng tính năng này.");
+    }
+
+    try {
+      final prompt = '''
+      Hãy phân tích hình ảnh này (có thể là hình chụp hóa đơn mua sắm HOẶC hình chụp các món đồ thực tế đặt cạnh nhau).
+      Hãy trích xuất/nhận diện danh sách các mặt hàng có trong ảnh.
+      Trả về kết quả dưới dạng JSON array, mỗi object có:
+      - "name": tên sản phẩm (Tiếng Việt)
+      - "estimated_price": đơn giá hoặc tổng giá ước tính của món đó (VND, số nguyên). Nếu là ảnh chụp đồ thực tế, hãy ước lượng giá theo thị trường Tết.
+      - "quantity": số lượng (số nguyên)
+      - "category": tên nhóm (Thực phẩm, Đồ uống, Bánh kẹo, v.v.)
+
+      Chỉ trả về chuỗi JSON ròng, không kèm markdown hay giải thích. Nếu không nhận diện được gì, trả về [].
+      ''';
+
+      final content = [
+        Content.multi([
+          TextPart(prompt),
+          DataPart('image/jpeg', imageBytes),
+        ])
+      ];
+
+      final response = await _model.generateContent(content);
+      final text = response.text;
+      
+      if (text == null) return [];
+
+      final cleanedText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final List<dynamic> decoded = jsonDecode(cleanedText);
+      
+      return decoded.map((e) => e as Map<String, dynamic>).toList();
+    } catch (e) {
+      print("Gemini OCR Error: $e");
+      throw Exception("Lỗi khi phân tích hóa đơn: $e");
     }
   }
 
