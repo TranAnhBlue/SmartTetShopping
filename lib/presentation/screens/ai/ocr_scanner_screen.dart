@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../core/utils/ai_service.dart';
+import '../../../core/utils/currency_utils.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
 import '../../../core/utils/sync_service.dart';
@@ -275,7 +276,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
               child: ListTile(
                 leading: CircleAvatar(child: Text('${item['quantity'] ?? 1}')),
                 title: Text(item['name'] ?? 'Không rõ'),
-                subtitle: Text('${(item['estimated_price'] ?? 0)} VND - ${item['category'] ?? 'Thực phẩm'}'),
+                subtitle: Text('${CurrencyUtils.format(item['estimated_price'] ?? 0)} - ${item['category'] ?? 'Thực phẩm'}'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.red),
                   onPressed: () => _removeItem(index),

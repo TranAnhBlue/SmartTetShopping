@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/currency_utils.dart';
 import '../../domain/entities/shopping_item.dart';
 
 class ItemCard extends StatelessWidget {
@@ -22,12 +22,6 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final currency = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
 
     /// giá ưu tiên từ market rẻ nhất
     final price =
@@ -96,7 +90,7 @@ class ItemCard extends StatelessWidget {
 
                     /// giá + số lượng
                     Text(
-                      "Giá: ${currency.format(price)}\n"
+                      "Giá: ${CurrencyUtils.format(price)}\n"
                           "Số lượng: ${item.quantity}",
                     ),
 
@@ -124,7 +118,7 @@ class ItemCard extends StatelessWidget {
 
                   /// tổng tiền
                   Text(
-                    currency.format(price * item.quantity),
+                    CurrencyUtils.format(price * item.quantity),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.red,

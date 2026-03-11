@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/currency_utils.dart';
 import '../providers/shopping_provider.dart';
 
 class SpendingDashboard extends StatelessWidget {
@@ -17,30 +17,10 @@ class SpendingDashboard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final currency = NumberFormat.currency(
-      locale: 'vi_VN',
-      symbol: '₫',
-      decimalDigits: 0,
-    );
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.red.shade800, Colors.red.shade600],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          )
-        ],
-      ),
+      // ...
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -68,13 +48,30 @@ class SpendingDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            currency.format(provider.tetBudget),
+            CurrencyUtils.format(provider.tetBudget),
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
+          if (provider.tetBudget > 0 && total > provider.tetBudget)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.yellowAccent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "⚠️ VƯỢT NGÂN SÁCH",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           const SizedBox(height: 12),
           // Progress Bar
           ClipRRect(
@@ -82,7 +79,7 @@ class SpendingDashboard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget).clamp(0, 1),
               backgroundColor: Colors.white24,
-              color: total > provider.tetBudget ? Colors.orangeAccent : Colors.white,
+              color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white,
               minHeight: 8,
             ),
           ),
@@ -91,12 +88,22 @@ class SpendingDashboard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Đã dùng: ${provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget * 100).toStringAsFixed(1)}%",
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                "Đã dùng: ${(provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget * 100)).toStringAsFixed(1)}%",
+                style: TextStyle(
+                  color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
+                  fontSize: 11,
+                  fontWeight: total > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
               Text(
-                "Còn lại: ${currency.format((provider.tetBudget - total).clamp(0, double.infinity))}",
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
+                total > provider.tetBudget
+                    ? "Vượt: ${CurrencyUtils.format(total - provider.tetBudget)}"
+                    : "Còn lại: ${CurrencyUtils.format((provider.tetBudget - total).clamp(0, double.infinity))}",
+                style: TextStyle(
+                  color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
+                  fontSize: 11,
+                  fontWeight: total > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
             ],
           ),
@@ -112,13 +119,14 @@ class SpendingDashboard extends StatelessWidget {
             ),
           ),
           Text(
-            currency.format(total),
+            CurrencyUtils.format(total),
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
+          // ...
           const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
