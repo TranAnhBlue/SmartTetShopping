@@ -3,7 +3,10 @@ import '../../data/local_db/dao/lucky_money_dao.dart';
 import '../../data/local_db/database_helper.dart';
 import '../../domain/entities/lucky_money.dart';
 
+import '../../core/utils/sync_service.dart';
+
 class LuckyMoneyProvider with ChangeNotifier {
+  final SyncService _syncService = SyncService();
   List<LuckyMoney> _luckyMoneyList = [];
   bool _isLoading = false;
 
@@ -34,7 +37,12 @@ class LuckyMoneyProvider with ChangeNotifier {
     final db = await DatabaseHelper.instance.database;
     final dao = LuckyMoneyDao(db);
     final id = await dao.insert(luckyMoney);
-    _luckyMoneyList.insert(0, luckyMoney.copyWith(id: id));
+    final newItem = luckyMoney.copyWith(id: id);
+    _luckyMoneyList.insert(0, newItem);
+    
+    // Sync to cloud
+    await _syncService.uploadLuckyMoney(newItem);
+    
     notifyListeners();
   }
 
@@ -46,6 +54,10 @@ class LuckyMoneyProvider with ChangeNotifier {
     final index = _luckyMoneyList.indexWhere((e) => e.id == luckyMoney.id);
     if (index != -1) {
       _luckyMoneyList[index] = luckyMoney;
+      
+      // Sync to cloud
+      await _syncService.uploadLuckyMoney(luckyMoney);
+      
       notifyListeners();
     }
   }
@@ -55,6 +67,51 @@ class LuckyMoneyProvider with ChangeNotifier {
     final dao = LuckyMoneyDao(db);
     await dao.delete(id);
     _luckyMoneyList.removeWhere((e) => e.id == id);
+    
+    // Sync to cloud
+    await _syncService.deleteLuckyMoney(id);
+    
     notifyListeners();
+  }
+
+  /// Cloud Sync
+  Future<void> syncCloudToLocal() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final cloudItems = await _syncService.listenToLuckyMoney().first.timeout(const Duration(seconds: 5));
+      final db = await DatabaseHelper.instance.database;
+      final dao = LuckyMoneyDao(db);
+
+      for (var cloudData in cloudItems) {
+        final id = int.tryParse(cloudData['id'] ?? '');
+        if (id == null) continue;
+
+        final exists = _luckyMoneyList.any((local) => local.id == id);
+        if (!exists) {
+          await dao.insert(LuckyMoney(
+            id: id,
+            recipient: cloudData['toName'] ?? '',
+            amount: (cloudData['amount'] ?? 0).toDouble(),
+            group: 'Gia đình', // Group mapping if needed
+            isPrepared: cloudData['isPrepared'] ?? 0,
+            isGave: cloudData['isGave'] ?? 0,
+          ));
+        }
+      }
+      await loadLuckyMoney();
+    } catch (e) {
+      debugPrint("LuckyMoney Sync Error: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> syncLocalToCloud() async {
+    for (var item in _luckyMoneyList) {
+      await _syncService.uploadLuckyMoney(item);
+    }
   }
 }

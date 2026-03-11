@@ -15,10 +15,37 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
   final currencyFormat = NumberFormat('#,###', 'vi_VN');
 
   @override
+  void initState() {
+    super.initState();
+    final provider = context.read<LuckyMoneyProvider>();
+    provider.loadLuckyMoney();
+    provider.syncCloudToLocal();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Quản lý Lì xì 🧧"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cloud_sync),
+            tooltip: "Đồng bộ đám mây",
+            onPressed: () async {
+              final provider = context.read<LuckyMoneyProvider>();
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(content: Text("Đang đồng bộ Lì xì...")),
+              );
+              await provider.syncCloudToLocal();
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(
+                    content: Text("✅ Đã đồng bộ Lì xì!"),
+                    backgroundColor: Colors.green),
+              );
+            },
+          ),
+        ],
         elevation: 0,
       ),
       body: Consumer<LuckyMoneyProvider>(

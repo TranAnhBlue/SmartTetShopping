@@ -215,6 +215,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         title: const Text("🎆 Smart Tết Shopping"),
         actions: [
           IconButton(icon: const Icon(Icons.bar_chart), tooltip: "So sánh chợ", onPressed: () => Navigator.pushNamed(context, '/compare-market')),
+          IconButton(
+            icon: const Icon(Icons.cloud_sync),
+            tooltip: "Test Backend",
+            onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.showSnackBar(
+                const SnackBar(content: Text("Đang kiểm tra kết nối Backend...")),
+              );
+              final result = await provider.syncServiceTest();
+              if (result == "SUCCESS") {
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text("✅ Kết nối Backend THÀNH CÔNG!"),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text("❌ $result"),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 5),
+                  ),
+                );
+              }
+            },
+          ),
           IconButton(icon: const Icon(Icons.auto_awesome), tooltip: "Smart Shopping AI", onPressed: () => Navigator.pushNamed(context, '/smart-ai')),
           IconButton(icon: const Icon(Icons.document_scanner), tooltip: "Quét hóa đơn", onPressed: () => Navigator.pushNamed(context, '/ocr-scanner')),
           IconButton(

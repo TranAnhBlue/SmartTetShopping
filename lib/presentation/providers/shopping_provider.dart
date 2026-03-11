@@ -302,6 +302,10 @@ class ShoppingProvider extends ChangeNotifier {
   /// ⭐ CLOUD SYNC
   /// =====================================================
 
+  Future<String> syncServiceTest() async {
+    return await _syncService.testConnection();
+  }
+
   Future<void> syncCloudToLocal() async {
     if (_authService.currentUser == null) return;
 
@@ -311,9 +315,13 @@ class ShoppingProvider extends ChangeNotifier {
       
       bool hasNewData = false;
       for (var cloudItem in cloudItems) {
-        final exists = items.any((local) => local.id == cloudItem.id || local.name == cloudItem.name);
+        final exists = items.any((local) => local.id == cloudItem.id);
         if (!exists) {
           await addItemUsecase(cloudItem);
+          hasNewData = true;
+        } else {
+          // Update local if cloud is newer (simplified)
+          await updateItemUsecase(cloudItem);
           hasNewData = true;
         }
       }
@@ -321,8 +329,19 @@ class ShoppingProvider extends ChangeNotifier {
       if (hasNewData) {
         await loadItems();
       }
+      
+      // Also push local unique items to cloud
+      await syncLocalToCloud();
+      
     } catch (e) {
       debugPrint("Sync Error/Timeout: $e");
+    }
+  }
+
+  Future<void> syncLocalToCloud() async {
+    if (_authService.currentUser == null) return;
+    for (var item in items) {
+      await _syncService.uploadItem(item);
     }
   }
 }
