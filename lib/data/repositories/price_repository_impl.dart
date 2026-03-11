@@ -5,6 +5,7 @@ import '../../domain/entities/market_total_cost.dart';
 import '../../domain/repositories/price_repository.dart';
 import '../local_db/dao/price_dao.dart';
 import '../models/price_model.dart';
+import '../local_db/database_helper.dart';
 
 class PriceRepositoryImpl implements PriceRepository {
 
@@ -78,5 +79,10 @@ class PriceRepositoryImpl implements PriceRepository {
       marketName: e['market_name'] as String,
       totalCost: (e['total_cost'] as num).toDouble(),
     )).toList();
+  }
+
+  @override
+  Future<void> seedPricesForItem(int itemId, double estimatedPrice) async {
+    await DatabaseHelper.instance.seedPricesForItem(itemId, estimatedPrice);
   }
 }

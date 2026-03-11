@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/foundation.dart';
 import 'core/utils/notification_service.dart';
 import 'core/utils/location_service.dart';
+import 'core/utils/ai_service.dart';
 
 import 'app.dart';
 
@@ -25,6 +26,11 @@ import 'domain/usecases/price/add_price_usecase.dart';
 import 'domain/usecases/price/get_prices_with_market_usecase.dart';
 import 'domain/usecases/price/get_cheapest_market_usecase.dart';
 import 'domain/usecases/price/get_total_cost_by_market_usecase.dart';
+import 'domain/usecases/price/seed_prices_usecase.dart';
+import 'domain/usecases/price/get_prices_by_item_usecase.dart';
+
+/// Category Usecase
+import 'domain/usecases/category/get_categories_usecase.dart';
 
 /// Providers
 import 'presentation/providers/shopping_provider.dart';
@@ -40,6 +46,7 @@ Future<void> main() async {
   /// ⭐ Init Services (Non-blocking)
   NotificationService().init().catchError((e) => debugPrint("Notification init error: $e"));
   LocationService().init().catchError((e) => debugPrint("Location init error: $e"));
+  AIService().init();
 
   /// ⭐ fix SQLite Web
   // if (kIsWeb) {
@@ -75,6 +82,13 @@ Future<void> main() async {
   final getPricesUsecase = GetPricesWithMarketUsecase(repository);
   final cheapestUsecase = GetCheapestMarketUsecase(repository);
   final totalUsecase = GetTotalCostByMarketUsecase(repository);
+  final seedPricesUsecase = SeedPricesUsecase(repository);
+  final getPricesByItemUsecase = GetPricesByItemUsecase(repository);
+
+  /// =========================
+  /// CATEGORY USECASES
+  /// =========================
+  final getCategoriesUsecase = GetCategoriesUsecase(repository);
 
   runApp(
     MultiProvider(
@@ -87,11 +101,12 @@ Future<void> main() async {
             getItemsUsecase,
             updateItemUsecase,
             deleteItemUsecase,
-
-            /// ⭐⭐⭐ THÊM 3 USECASE NÀY (FIX CHÍNH)
             getPricesUsecase,
             cheapestUsecase,
             totalUsecase,
+            getCategoriesUsecase,
+            seedPricesUsecase,
+            getPricesByItemUsecase,
           )
             ..loadCategories()
             ..loadItems(),

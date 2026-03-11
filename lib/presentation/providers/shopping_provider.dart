@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../data/local_db/dao/price_dao.dart';
-import '../../data/local_db/database_helper.dart';
-
 import '../../domain/entities/shopping_item.dart';
 import '../../domain/entities/category.dart';
 
@@ -13,6 +10,9 @@ import '../../domain/usecases/item/update_item_usecase.dart';
 import '../../domain/usecases/price/get_cheapest_market_usecase.dart';
 import '../../domain/usecases/price/get_prices_with_market_usecase.dart';
 import '../../domain/usecases/price/get_total_cost_by_market_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/price/seed_prices_usecase.dart';
+import '../../domain/usecases/price/get_prices_by_item_usecase.dart';
 
 class ShoppingProvider extends ChangeNotifier {
 
@@ -24,8 +24,10 @@ class ShoppingProvider extends ChangeNotifier {
   final GetPricesWithMarketUsecase _getPrices;
   final GetCheapestMarketUsecase _getCheapest;
   final GetTotalCostByMarketUsecase _getTotalCost;
-
-  final PriceDao priceDao = PriceDao();
+  
+  final GetCategoriesUsecase _getCategories;
+  final SeedPricesUsecase _seedPrices;
+  final GetPricesByItemUsecase _getPricesByItem;
 
   ShoppingProvider(
       this.addItemUsecase,
@@ -34,7 +36,10 @@ class ShoppingProvider extends ChangeNotifier {
       this.deleteItemUsecase,
       this._getPrices,
       this._getCheapest,
-      this._getTotalCost
+      this._getTotalCost,
+      this._getCategories,
+      this._seedPrices,
+      this._getPricesByItem
       );
 
   /// =====================================================
@@ -103,10 +108,12 @@ class ShoppingProvider extends ChangeNotifier {
 
       if (item.id == null) continue;
 
-      final cheapest =
-      await priceDao.getCheapestMarket(item.id!);
+      final cheapest = await _getCheapest(item.id!);
 
-      cheapestMarkets[item.id!] = cheapest;
+      cheapestMarkets[item.id!] = cheapest == null ? null : {
+        'market_name': cheapest.marketName,
+        'price': cheapest.price,
+      };
     }
   }
 
@@ -115,9 +122,7 @@ class ShoppingProvider extends ChangeNotifier {
   /// =====================================================
 
   Future<void> loadCategories() async {
-    categories =
-    await DatabaseHelper.instance.getCategories();
-
+    categories = await _getCategories();
     notifyListeners();
   }
 
@@ -181,8 +186,11 @@ class ShoppingProvider extends ChangeNotifier {
     }
 
     if (item.id != null) {
-      cheapestMarkets[item.id!] =
-      await priceDao.getCheapestMarket(item.id!);
+      final cheapest = await _getCheapest(item.id!);
+      cheapestMarkets[item.id!] = cheapest == null ? null : {
+        'market_name': cheapest.marketName,
+        'price': cheapest.price,
+      };
     }
 
     notifyListeners();
@@ -233,15 +241,15 @@ class ShoppingProvider extends ChangeNotifier {
     final item = items.firstWhere((e) => e.id == itemId);
 
     /// luôn đảm bảo có price
-    await DatabaseHelper.instance.seedPricesForItem(
-      itemId,
-      item.estimatedPrice,
-    );
+    await _seedPrices(itemId, item.estimatedPrice);
 
-    final prices =
-    await priceDao.getPricesByItem(itemId);
+    final prices = await _getPrices(itemId);
 
-    itemPrices[itemId] = prices;
+    itemPrices[itemId] = prices.map((e) => {
+      'marketId': e.marketId,
+      'market_name': e.marketName,
+      'price': e.price,
+    }).toList();
 
     await findCheapestMarket(itemId);
 
@@ -281,6 +289,5 @@ class ShoppingProvider extends ChangeNotifier {
 
     await loadItemPrices(item.id!);
   }
-
-
 }
+

@@ -14,4 +14,6 @@ abstract class PriceRepository {
   Future<CheapestMarket?> getCheapestMarket(int itemId);
 
   Future<List<MarketTotalCost>> getTotalCostByMarket();
+
+  Future<void> seedPricesForItem(int itemId, double estimatedPrice);
 }

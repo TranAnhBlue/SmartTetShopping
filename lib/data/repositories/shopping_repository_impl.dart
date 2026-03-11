@@ -2,19 +2,21 @@ import '../../domain/entities/cheapest_market.dart';
 import '../../domain/entities/market_price.dart';
 import '../../domain/entities/market_total_cost.dart';
 import '../../domain/entities/shopping_item.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/repositories/item_repository.dart';
-import '../../domain/repositories/shopping_repository.dart';
 import '../../domain/repositories/price_repository.dart';
+import '../../domain/repositories/category_repository.dart';
 import '../../domain/entities/item_price.dart';
 
 import '../local_db/dao/item_dao.dart';
 import '../local_db/dao/price_dao.dart';
+import '../local_db/database_helper.dart';
 
 import '../models/item_model.dart';
 import '../models/price_model.dart';
 
 class ShoppingRepositoryImpl
-    implements ItemRepository, PriceRepository {
+    implements ItemRepository, PriceRepository, CategoryRepository {
 
   final ItemDao itemDao;
   final PriceDao priceDao;
@@ -57,19 +59,14 @@ class ShoppingRepositoryImpl
 
   @override
   Future<List<ItemPrice>> getPricesByItem(int itemId) async {
-
     final models = await priceDao.getByItem(itemId);
-
     return models.map(_priceToEntity).toList();
   }
 
   @override
   Future<List<MarketPrice>> getPricesWithMarket(int itemId) async {
-
     final data = await priceDao.getPricesWithMarket(itemId);
-
     return data.map((e) {
-
       return MarketPrice(
         id: e['id'],
         itemId: e['item_id'],
@@ -77,17 +74,13 @@ class ShoppingRepositoryImpl
         marketName: e['market_name'],
         price: (e['price'] as num?)?.toDouble() ?? 0,
       );
-
     }).toList();
   }
 
   @override
   Future<CheapestMarket?> getCheapestMarket(int itemId) async {
-
     final data = await priceDao.getCheapestMarket(itemId);
-
     if (data == null) return null;
-
     return CheapestMarket(
       marketName: data['market_name'],
       price: (data['price'] as num?)?.toDouble() ?? 0,
@@ -96,17 +89,32 @@ class ShoppingRepositoryImpl
 
   @override
   Future<List<MarketTotalCost>> getTotalCostByMarket() async {
-
     final data = await priceDao.getTotalCostByMarket();
-
     return data.map((e) {
-
       return MarketTotalCost(
         marketName: e['market_name'],
         totalCost: (e['total_cost'] as num?)?.toDouble() ?? 0,
       );
-
     }).toList();
+  }
+
+  @override
+  Future<void> seedPricesForItem(int itemId, double estimatedPrice) async {
+    await DatabaseHelper.instance.seedPricesForItem(itemId, estimatedPrice);
+  }
+
+  // =====================================================
+  // CATEGORY
+  // =====================================================
+
+  @override
+  Future<List<Category>> getCategories() async {
+    return await DatabaseHelper.instance.getCategories();
+  }
+
+  @override
+  Future<void> addCategory(Category category) async {
+    // Implementation if needed, but not used in current provider scope
   }
 
   // =====================================================

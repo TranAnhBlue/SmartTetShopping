@@ -1,82 +1,90 @@
-import 'dart:async';
+import 'dart:convert';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import '../constants/app_constants.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
   factory AIService() => _instance;
   AIService._internal();
 
-  /// 🧠 LOCAL EXPERT DATABASE
-  final Map<String, Map<String, dynamic>> _expertKnowledge = {
-    'cúng': {
-      'advice': "🧧 Cho việc cúng kiếng, bạn nên ưu tiên chọn hoa quả tươi (Ngũ quả), hoa cúc hoặc hoa ly. Đừng quên mua đủ nếp, đậu xanh và thịt heo để gói bánh chưng/bánh tét nhé!",
-      'items': [
-        {'name': 'Gạo nếp ngon', 'estimated_price': 35000, 'category': 'Thực phẩm', 'quantity': 2},
-        {'name': 'Đậu xanh cà vỏ', 'estimated_price': 45000, 'category': 'Thực phẩm', 'quantity': 1},
-        {'name': 'Thịt ba rọi', 'estimated_price': 150000, 'category': 'Thực phẩm', 'quantity': 1},
-        {'name': 'Hoa cúc vàng', 'estimated_price': 50000, 'category': 'Trang trí', 'quantity': 2},
-        {'name': 'Trái cây Ngũ quả', 'estimated_price': 200000, 'category': 'Thực phẩm', 'quantity': 1},
-      ]
-    },
-    'trang trí': {
-      'advice': "✨ Để nhà cửa thêm rộn ràng, bạn có thể mua thêm bao lì xì, dây treo may mắn và vài chậu hoa vạn thọ hoặc hoa mai/đào. Một chút ánh sáng từ dây đèn LED cũng rất tuyệt!",
-      'items': [
-        {'name': 'Bao lì xì đỏ', 'estimated_price': 20000, 'category': 'Trang trí', 'quantity': 5},
-        {'name': 'Dây treo trang trí', 'estimated_price': 15000, 'category': 'Trang trí', 'quantity': 10},
-        {'name': 'Dây đèn LED', 'estimated_price': 80000, 'category': 'Trang trí', 'quantity': 2},
-        {'name': 'Hoa vạn thọ', 'estimated_price': 40000, 'category': 'Trang trí', 'quantity': 4},
-      ]
-    },
-    'quà': {
-      'advice': "🎁 Quà biếu Tết thường là các giỏ bánh kẹo sang trọng, trà ngon hoặc rượu vang. Bạn nên chọn những sản phẩm có bao bì màu đỏ hoặc vàng để mang lại may mắn.",
-      'items': [
-        {'name': 'Giỏ quà bánh kẹo', 'estimated_price': 500000, 'category': 'Bánh kẹo', 'quantity': 1},
-        {'name': 'Hộp trà đặc sản', 'estimated_price': 120000, 'category': 'Đồ uống', 'quantity': 2},
-        {'name': 'Rượu vang đỏ', 'estimated_price': 350000, 'category': 'Đồ uống', 'quantity': 1},
-      ]
-    },
-    'ăn': {
-      'advice': "🥘 Tiệc tất niên không thể thiếu gà luộc, canh măng và nem rán. Hãy kiểm tra lại gia vị trong bếp như nước mắm, dầu ăn và hạt nêm xem đã đủ chưa nhé!",
-      'items': [
-        {'name': 'Gà ta thả vườn', 'estimated_price': 180000, 'category': 'Thực phẩm', 'quantity': 1},
-        {'name': 'Măng khô', 'estimated_price': 100000, 'category': 'Thực phẩm', 'quantity': 1},
-        {'name': 'Bánh tráng cuốn nem', 'estimated_price': 15000, 'category': 'Thực phẩm', 'quantity': 3},
-        {'name': 'Nước mắm ngon', 'estimated_price': 85000, 'category': 'Thực phẩm', 'quantity': 1},
-      ]
-    }
-  };
+  late final GenerativeModel _model;
 
-  /// Generates a suggested shopping list for Tet based on local templates
+  void init() {
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash',
+      apiKey: AppConstants.geminiApiKey,
+    );
+  }
+
+  /// Generates a suggested shopping list for Tet based on Gemini AI
   Future<List<Map<String, dynamic>>> generateShoppingList(String query) async {
-    await Future.delayed(const Duration(milliseconds: 800)); // Simulate "thinking"
-    
-    final normalized = query.toLowerCase();
-    
-    for (var key in _expertKnowledge.keys) {
-      if (normalized.contains(key)) {
-        return List<Map<String, dynamic>>.from(_expertKnowledge[key]!['items']);
-      }
+    // Chỉ trả về fallback nếu key vẫn là placeholder mặc định
+    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+      return _generateFallbackList(query);
     }
-    
-    // Default fallback list if no match
-    return [
-      {'name': 'Bánh chưng', 'estimated_price': 60000, 'category': 'Thực phẩm', 'quantity': 2},
-      {'name': 'Kẹo mứt Tết', 'estimated_price': 45000, 'category': 'Bánh kẹo', 'quantity': 1},
-      {'name': 'Nước ngọt/Bia', 'estimated_price': 180000, 'category': 'Đồ uống', 'quantity': 1},
-    ];
+
+    try {
+      final prompt = '''
+      Bạn là chuyên gia về sắm Tết Việt Nam. 
+      Người dùng muốn: "$query"
+      Hãy gợi ý danh sách tối đa 5 món đồ cần mua. 
+      Trả về kết quả dưới dạng JSON array, mỗi object có:
+      - "name": tên sản phẩm (Tiếng Việt)
+      - "estimated_price": giá ước tính (VND, số nguyên)
+      - "category": tên nhóm (Thực phẩm, Đồ cúng, Trang trí, Đồ uống, Bánh kẹo)
+      - "quantity": số lượng cần mua (số nguyên)
+      
+      Chỉ trả về chuỗi JSON ròng, không kèm markdown hay giải thích.
+      ''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      
+      final text = response.text;
+      if (text == null) return _generateFallbackList(query);
+
+      // Clean the response if Gemini wraps it in markdown code blocks
+      final cleanedText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final List<dynamic> decoded = jsonDecode(cleanedText);
+      
+      return decoded.map((e) => e as Map<String, dynamic>).toList();
+    } catch (e) {
+      print("Gemini AI Error: $e");
+      return _generateFallbackList(query);
+    }
   }
 
   /// Provides expert advice on choosing ingredients or traditional Tet recipes
   Future<String> getTetAdvice(String query) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    final normalized = query.toLowerCase();
-    
-    for (var key in _expertKnowledge.keys) {
-      if (normalized.contains(key)) {
-        return _expertKnowledge[key]!['advice'];
-      }
+    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+      return "💡 Chào bạn! Hãy cài đặt Gemini API Key để nhận lời khuyên chuyên sâu từ AI nhé!";
     }
-    
-    return "💡 Chào bạn! Bạn có thể hỏi tôi về 'đồ cúng', 'trang trí', 'quà biếu' hoặc 'đồ ăn Tết' để nhận được những gợi ý mua sắm thông minh nhất!";
+
+    try {
+      final prompt = "Bạn là chuyên gia về văn hóa và mua sắm Tết Việt Nam. Hãy đưa ra lời khuyên ngắn gọn (khoảng 2-3 câu) cho yêu cầu này của người dùng: $query";
+      
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      
+      return response.text ?? "Chúc bạn sắm Tết thật ưng ý!";
+    } catch (e) {
+      return "💡 Hãy ưu tiên chọn thực phẩm tươi ngon và trang trí nhà cửa rực rỡ để đón Tết may mắn nhé!";
+    }
+  }
+
+  /// Keep the old logic as fallback
+  List<Map<String, dynamic>> _generateFallbackList(String query) {
+     final normalized = query.toLowerCase();
+     if (normalized.contains('cúng')) {
+       return [
+        {'name': 'Gạo nếp ngon', 'estimated_price': 35000, 'category': 'Thực phẩm', 'quantity': 2},
+        {'name': 'Đậu xanh cà vỏ', 'estimated_price': 45000, 'category': 'Thực phẩm', 'quantity': 1},
+        {'name': 'Hoa cúc vàng', 'estimated_price': 50000, 'category': 'Trang trí', 'quantity': 2},
+      ];
+     }
+     return [
+      {'name': 'Bánh chưng', 'estimated_price': 60000, 'category': 'Thực phẩm', 'quantity': 2},
+      {'name': 'Kẹo mứt Tết', 'estimated_price': 45000, 'category': 'Bánh kẹo', 'quantity': 1},
+    ];
   }
 }
