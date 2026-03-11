@@ -251,6 +251,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         title: const Text("🎆 Smart Tết Shopping"),
         actions: [
           IconButton(
+            icon: const Icon(Icons.cloud_sync),
+            tooltip: "Cloud",
+            onPressed: () async {
+              final provider = context.read<ShoppingProvider>();
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              scaffoldMessenger.showSnackBar(const SnackBar(content: Text("Đang kiểm tra kết nối Backend...")));
+              final result = await provider.syncServiceTest();
+              scaffoldMessenger.showSnackBar(SnackBar(
+                content: Text(result == "SUCCESS" ? "✅ Kết nối Backend THÀNH CÔNG!" : "❌ $result"),
+                backgroundColor: result == "SUCCESS" ? Colors.green : Colors.red,
+              ));
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: "Thoát",
             onPressed: () async {
@@ -291,15 +305,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             Row(
               children: [
                 _buildBarItem(Icons.bar_chart, "Thống kê", () => Navigator.pushNamed(context, '/compare-market')),
-                _buildBarItem(Icons.cloud_sync, "Cloud", () async {
-                  final scaffoldMessenger = ScaffoldMessenger.of(context);
-                  scaffoldMessenger.showSnackBar(const SnackBar(content: Text("Đang kiểm tra kết nối Backend...")));
-                  final result = await provider.syncServiceTest();
-                  scaffoldMessenger.showSnackBar(SnackBar(
-                    content: Text(result == "SUCCESS" ? "✅ Kết nối Backend THÀNH CÔNG!" : "❌ $result"),
-                    backgroundColor: result == "SUCCESS" ? Colors.green : Colors.red,
-                  ));
-                }),
+                _buildBarItem(Icons.wallet_giftcard, "Lì xì", () => Navigator.pushNamed(context, '/lucky-money')),
               ],
             ),
             const SizedBox(width: 48), // FAB Notch
