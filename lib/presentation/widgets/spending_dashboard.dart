@@ -66,6 +66,7 @@ class SpendingDashboard extends StatelessWidget {
           Divider(color: Colors.white.withOpacity(0.2)),
           const SizedBox(height: 20),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
                 height: 140,
@@ -83,10 +84,11 @@ class SpendingDashboard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: stats.entries.map((entry) {
+                    final percentage = total == 0 ? 0 : (entry.value / total * 100);
                     return _buildIndicator(
                       entry.key,
                       _getCategoryColor(entry.key),
-                      (entry.value / total * 100).toStringAsFixed(0),
+                      percentage.toStringAsFixed(0),
                     );
                   }).toList(),
                 ),
@@ -100,9 +102,14 @@ class SpendingDashboard extends StatelessWidget {
 
   Map<String, double> _calculateStats(ShoppingProvider provider) {
     final Map<String, double> totals = {};
-    for (var item in provider.items) {
+    for (var item in provider.filteredItems) {
+      if (item.id == null) continue;
+      
       final categoryName = provider.getCategoryName(item.categoryId);
-      totals[categoryName] = (totals[categoryName] ?? 0) + (item.estimatedPrice * item.quantity);
+      final cheapest = provider.cheapestMarkets[item.id!];
+      final price = cheapest?['price'] ?? item.estimatedPrice;
+      
+      totals[categoryName] = (totals[categoryName] ?? 0) + (price * item.quantity);
     }
     return totals;
   }

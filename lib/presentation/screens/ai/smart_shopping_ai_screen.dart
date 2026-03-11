@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../core/utils/ai_service.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
@@ -70,7 +71,41 @@ class _SmartShoppingAIScreenState extends State<SmartShoppingAIScreen> {
       const SnackBar(content: Text("🛍️ Đã thêm tất cả vào danh sách!")),
     );
     
-    Navigator.pop(context); // Quay lại trang chính để xem kết quả
+    // Giữ nguyên trang để xem danh sách hoặc pop cũng được, pop thì comment lại.
+    // Navigator.pop(context); 
+  }
+
+  void _addSingleItem(Map<String, dynamic> itemData) {
+    if (itemData.isEmpty) return;
+
+    final provider = context.read<ShoppingProvider>();
+    final newItem = ShoppingItem(
+      name: itemData['name'] ?? "Sản phẩm mới",
+      estimatedPrice: (itemData['estimated_price'] as num).toDouble(),
+      categoryId: provider.getCategoryIdByName(itemData['category'] ?? ""),
+      quantity: (itemData['quantity'] as num).toInt(),
+    );
+
+    provider.addItemsBatch([newItem]);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("🛍️ Đã thêm ${newItem.name} vào danh sách!")),
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
+    return formatter.format(amount);
+  }
+
+  double _calculateTotalPrice() {
+    double total = 0;
+    for (var item in _suggestedItemsOutput) {
+      final price = (item['estimated_price'] as num).toDouble();
+      final quantity = (item['quantity'] as num).toInt();
+      total += price * quantity;
+    }
+    return total;
   }
 
   @override
@@ -218,24 +253,60 @@ class _SmartShoppingAIScreenState extends State<SmartShoppingAIScreen> {
           const SizedBox(height: 24),
         ],
 
-        // 2. Suggested Items Section
+      // 2. Suggested Items Section
         if (_suggestedItemsOutput.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "📋 Danh sách gợi ý",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              TextButton.icon(
-                onPressed: _addAllItems,
-                icon: const Icon(Icons.add_shopping_cart, size: 20),
-                label: const Text("Thêm tất cả"),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-              )
-            ],
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "📋 Danh sách gợi ý",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    TextButton.icon(
+                      onPressed: _addAllItems,
+                      icon: const Icon(Icons.add_shopping_cart, size: 20),
+                      label: const Text("Thêm tất cả"),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red.shade600,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                    )
+                  ],
+                ),
+                const Divider(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Tổng dự kiến:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      _formatCurrency(_calculateTotalPrice()),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.green),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           ..._suggestedItemsOutput.map((item) => _buildSuggestionCard(item)),
         ],
       ],
@@ -246,17 +317,33 @@ class _SmartShoppingAIScreenState extends State<SmartShoppingAIScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
           child: const Icon(Icons.shopping_bag, color: Colors.orange),
         ),
-        title: Text(item['name'] ?? "", style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${item['category']} • SL: ${item['quantity']}"),
-        trailing: Text(
-          "${item['estimated_price']}đ",
-          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+        title: Text(item['name'] ?? "", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("${item['category']} • SL: ${item['quantity']}"),
+              const SizedBox(height: 4),
+              Text(
+                _formatCurrency((item['estimated_price'] as num).toDouble()),
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ],
+          ),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.add_circle, color: Colors.green, size: 30),
+          onPressed: () => _addSingleItem(item),
+          tooltip: 'Thêm vào giỏ',
         ),
       ),
     );
