@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late AnimationController _petalController;
   late List<double> _petalPositions;
   int _currentPage = 1;
-  final int _itemsPerPage = 3;
+  final int _itemsPerPage = 2;
 
   List getPagedItems(List items) {
     final start = (_currentPage - 1) * _itemsPerPage;
@@ -190,17 +190,53 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       );
 
+  Widget _buildBarItem(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 75,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 24),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPagination(int totalItems) {
     final totalPages = getTotalPages(totalItems);
     if (totalPages <= 1) return const SizedBox();
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      height: 20,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          IconButton(icon: const Icon(Icons.chevron_left), onPressed: _currentPage > 1 ? () => setState(() => _currentPage--) : null),
-          Text("Page $_currentPage / $totalPages", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          IconButton(icon: const Icon(Icons.chevron_right), onPressed: _currentPage < totalPages ? () => setState(() => _currentPage++) : null),
+          GestureDetector(
+            onTap: _currentPage > 1 ? () => setState(() => _currentPage--) : null,
+            child: Icon(Icons.chevron_left, size: 16, color: _currentPage > 1 ? Colors.white : Colors.white24),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              "$_currentPage / $totalPages",
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+          ),
+          GestureDetector(
+            onTap: _currentPage < totalPages ? () => setState(() => _currentPage++) : null,
+            child: Icon(Icons.chevron_right, size: 16, color: _currentPage < totalPages ? Colors.white : Colors.white24),
+          ),
         ],
       ),
     );
@@ -214,117 +250,174 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       appBar: AppBar(
         title: const Text("🎆 Smart Tết Shopping"),
         actions: [
-          IconButton(icon: const Icon(Icons.bar_chart), tooltip: "So sánh chợ", onPressed: () => Navigator.pushNamed(context, '/compare-market')),
-          IconButton(
-            icon: const Icon(Icons.cloud_sync),
-            tooltip: "Test Backend",
-            onPressed: () async {
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              scaffoldMessenger.showSnackBar(
-                const SnackBar(content: Text("Đang kiểm tra kết nối Backend...")),
-              );
-              final result = await provider.syncServiceTest();
-              if (result == "SUCCESS") {
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                    content: Text("✅ Kết nối Backend THÀNH CÔNG!"),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              } else {
-                scaffoldMessenger.showSnackBar(
-                  SnackBar(
-                    content: Text("❌ $result"),
-                    backgroundColor: Colors.red,
-                    duration: const Duration(seconds: 5),
-                  ),
-                );
-              }
-            },
-          ),
-          IconButton(icon: const Icon(Icons.auto_awesome), tooltip: "Smart Shopping AI", onPressed: () => Navigator.pushNamed(context, '/smart-ai')),
-          IconButton(icon: const Icon(Icons.document_scanner), tooltip: "Quét hóa đơn", onPressed: () => Navigator.pushNamed(context, '/ocr-scanner')),
           IconButton(
             icon: const Icon(Icons.logout),
-            tooltip: "Đăng xuất",
+            tooltip: "Thoát",
             onPressed: () async {
-              await AuthService().signOut();
-              if (mounted) Navigator.pushReplacementNamed(context, '/login');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Đăng xuất?"),
+                  content: const Text("Bạn có chắc chắn muốn đăng xuất không?"),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Hủy")),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Đăng xuất")),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await AuthService().signOut();
+                if (mounted) Navigator.pushReplacementNamed(context, '/login');
+              }
             },
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(backgroundColor: Colors.red, child: const Icon(Icons.add), onPressed: () => Navigator.pushNamed(context, "/add-item")),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        onPressed: () => Navigator.pushNamed(context, "/add-item"),
+        child: const Icon(Icons.add, color: Colors.white, size: 30),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        height: 70, // Increased for labels
+        color: const Color(0xFFD32F2F),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left side
+            Row(
+              children: [
+                _buildBarItem(Icons.bar_chart, "Thống kê", () => Navigator.pushNamed(context, '/compare-market')),
+                _buildBarItem(Icons.cloud_sync, "Cloud", () async {
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  scaffoldMessenger.showSnackBar(const SnackBar(content: Text("Đang kiểm tra kết nối Backend...")));
+                  final result = await provider.syncServiceTest();
+                  scaffoldMessenger.showSnackBar(SnackBar(
+                    content: Text(result == "SUCCESS" ? "✅ Kết nối Backend THÀNH CÔNG!" : "❌ $result"),
+                    backgroundColor: result == "SUCCESS" ? Colors.green : Colors.red,
+                  ));
+                }),
+              ],
+            ),
+            const SizedBox(width: 48), // FAB Notch
+            // Right side
+            Row(
+              children: [
+                _buildBarItem(Icons.auto_awesome, "AI Tết", () => Navigator.pushNamed(context, '/smart-ai')),
+                _buildBarItem(Icons.document_scanner, "Quét đơn", () => Navigator.pushNamed(context, '/ocr-scanner')),
+              ],
+            ),
+          ],
+        ),
+      ),
       body: Stack(
         children: [
           _buildTetBackground(),
-          Column(
+          CustomScrollView(
+            slivers: [
+              if (provider.isLoading && provider.items.isEmpty)
+                const SliverToBoxAdapter(child: LinearProgressIndicator(color: Colors.red)),
+              
+              SliverToBoxAdapter(
+                child: Column(
                   children: [
-                    if (provider.isLoading && provider.items.isEmpty)
-                      const LinearProgressIndicator(color: Colors.red),
-                    Expanded(
-                      flex: 4,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            _buildTetBanner(),
-                            const TetCountdown(),
-                            const SpendingDashboard(),
-                            const SizedBox(height: 12),
-                            _buildQuickActions(),
-                            const SizedBox(height: 12),
-                            _buildCategoryFilter(provider),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: provider.items.isEmpty
-                          ? const Center(
-                              child: Text(
-                                "🛒 Danh sách đang trống!\nBấm + hoặc Quét đơn để bắt đầu nhé.",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.white70, fontSize: 16),
-                              ),
-                            )
-                          : Column(
-                        children: [
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: pagedItems.length,
-                              itemBuilder: (_, i) {
-                                final item = pagedItems[i];
-                                return ItemCard(
-                                  item: item,
-                                  categoryName: provider.getCategoryName(item.categoryId),
-                                  cheapestMarket: item.id == null ? null : provider.cheapestMarkets[item.id!],
-                                  onTap: () async {
-                                    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-                                    try {
-                                      await provider.openItemPrice(item);
-                                    } catch (e) {
-                                      debugPrint("Compare price error: $e");
-                                    }
-                                    if (!context.mounted) return;
-                                    Navigator.pop(context);
-                                    Navigator.pushNamed(context, '/item-price', arguments: ItemPriceArgs(itemId: item.id!, itemName: item.name));
-                                  },
-                                  onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
-                                  onDelete: () => provider.deleteItem(item.id!),
-                                );
-                              },
-                            ),
-                          ),
-                          _buildPagination(provider.filteredItems.length),
-                        ],
-                      ),
-                    )
+                    _buildTetBanner(),
+                    const TetCountdown(),
+                    const SpendingDashboard(),
+                    const SizedBox(height: 12),
+                    _buildQuickActions(),
+                    const SizedBox(height: 12),
                   ],
+                ),
+              ),
+
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _CategoryFilterDelegate(
+                  child: Container(
+                    color: Colors.transparent, // Background will show through
+                    child: _buildCategoryFilter(provider),
+                  ),
+                ),
+              ),
+
+              if (provider.items.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Text(
+                      "🛒 Danh sách đang trống!\nBấm + hoặc Quét đơn để bắt đầu nhé.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                  ),
                 )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) {
+                        final item = pagedItems[i];
+                        return ItemCard(
+                          item: item,
+                          categoryName: provider.getCategoryName(item.categoryId),
+                          cheapestMarket: item.id == null ? null : provider.cheapestMarkets[item.id!],
+                          onTap: () async {
+                            showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                            try {
+                              await provider.openItemPrice(item);
+                            } catch (e) {
+                              debugPrint("Compare price error: $e");
+                            }
+                            if (!context.mounted) return;
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/item-price', arguments: ItemPriceArgs(itemId: item.id!, itemName: item.name));
+                          },
+                          onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
+                          onDelete: () => provider.deleteItem(item.id!),
+                        );
+                      },
+                      childCount: pagedItems.length,
+                    ),
+                  ),
+                ),
+
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildPagination(provider.filteredItems.length),
+                    const SizedBox(height: 80), // Padding for FAB
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
+}
+
+class _CategoryFilterDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _CategoryFilterDelegate({required this.child});
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  double get maxExtent => 55.0;
+
+  @override
+  double get minExtent => 55.0;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
 }
 
