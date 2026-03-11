@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../presentation/args/item_price_args.dart';
 import '../presentation/screens/ai/ocr_scanner_screen.dart';
+import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/ai/smart_shopping_ai_screen.dart';
 import '../presentation/screens/compare/compare_market_premium_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
@@ -17,6 +18,8 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/add-item':
         return MaterialPageRoute(builder: (_) => const AddItemScreen());
       case '/edit-item':

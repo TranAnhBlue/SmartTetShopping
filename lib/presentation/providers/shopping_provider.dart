@@ -13,8 +13,12 @@ import '../../domain/usecases/price/get_total_cost_by_market_usecase.dart';
 import '../../domain/usecases/category/get_categories_usecase.dart';
 import '../../domain/usecases/price/seed_prices_usecase.dart';
 import '../../domain/usecases/price/get_prices_by_item_usecase.dart';
+import '../../core/utils/sync_service.dart';
+import '../../core/utils/auth_service.dart';
 
 class ShoppingProvider extends ChangeNotifier {
+  final SyncService _syncService = SyncService();
+  final AuthService _authService = AuthService();
 
   final AddItemUsecase addItemUsecase;
   final GetItemsUsecase getItemsUsecase;
@@ -84,16 +88,19 @@ class ShoppingProvider extends ChangeNotifier {
   /// =====================================================
 
   Future<void> loadItems() async {
-
+    if (isLoading) return;
     isLoading = true;
     notifyListeners();
 
-    items = await getItemsUsecase();
-
-    await _loadCheapestMarkets();
-
-    isLoading = false;
-    notifyListeners();
+    try {
+      items = await getItemsUsecase();
+      await _loadCheapestMarkets();
+    } catch (e) {
+      debugPrint("Load Items Error: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   /// =====================================================
@@ -101,20 +108,15 @@ class ShoppingProvider extends ChangeNotifier {
   /// =====================================================
 
   Future<void> _loadCheapestMarkets() async {
-
     cheapestMarkets.clear();
-
-    for (final item in items) {
-
-      if (item.id == null) continue;
-
+    final futures = items.where((e) => e.id != null).map((item) async {
       final cheapest = await _getCheapest(item.id!);
-
       cheapestMarkets[item.id!] = cheapest == null ? null : {
         'market_name': cheapest.marketName,
         'price': cheapest.price,
       };
-    }
+    });
+    await Future.wait(futures);
   }
 
   /// =====================================================
@@ -158,6 +160,10 @@ class ShoppingProvider extends ChangeNotifier {
 
     await addItemUsecase(item);
     await loadItems();
+    
+    // Sync to cloud
+    final newItem = items.firstWhere((e) => e.name == name && e.categoryId == categoryId);
+    await _syncService.uploadItem(newItem);
   }
 
   Future<void> addItemsBatch(List<ShoppingItem> newItems) async {
@@ -176,7 +182,6 @@ class ShoppingProvider extends ChangeNotifier {
   }
 
   Future<void> updateItem(ShoppingItem item) async {
-
     await updateItemUsecase(item);
 
     final index = items.indexWhere((e) => e.id == item.id);
@@ -191,13 +196,15 @@ class ShoppingProvider extends ChangeNotifier {
         'market_name': cheapest.marketName,
         'price': cheapest.price,
       };
+      
+      // Sync to cloud
+      await _syncService.uploadItem(item);
     }
 
     notifyListeners();
   }
 
   Future<void> deleteItem(int id) async {
-
     await deleteItemUsecase(id);
 
     items.removeWhere((e) => e.id == id);
@@ -205,6 +212,9 @@ class ShoppingProvider extends ChangeNotifier {
     cheapestMarkets.remove(id);
     itemPrices.remove(id);
     _generatedItems.remove(id);
+
+    // Sync to cloud
+    await _syncService.deleteItem(id);
 
     notifyListeners();
   }
@@ -283,11 +293,37 @@ class ShoppingProvider extends ChangeNotifier {
   /// =====================================================
 
   Future<void> openItemPrice(ShoppingItem item) async {
-
     if (item.id == null) return;
     if (itemPrices.containsKey(item.id)) return;
-
     await loadItemPrices(item.id!);
+  }
+
+  /// =====================================================
+  /// ⭐ CLOUD SYNC
+  /// =====================================================
+
+  Future<void> syncCloudToLocal() async {
+    if (_authService.currentUser == null) return;
+
+    try {
+      // Timeout after 5 seconds to prevent getting stuck
+      final cloudItems = await _syncService.listenToItems().first.timeout(const Duration(seconds: 5));
+      
+      bool hasNewData = false;
+      for (var cloudItem in cloudItems) {
+        final exists = items.any((local) => local.id == cloudItem.id || local.name == cloudItem.name);
+        if (!exists) {
+          await addItemUsecase(cloudItem);
+          hasNewData = true;
+        }
+      }
+      
+      if (hasNewData) {
+        await loadItems();
+      }
+    } catch (e) {
+      debugPrint("Sync Error/Timeout: $e");
+    }
   }
 }
 

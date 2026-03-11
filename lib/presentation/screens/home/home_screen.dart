@@ -9,6 +9,7 @@ import '../../widgets/item_card.dart';
 import '../../widgets/tet_countdown.dart';
 import '../../widgets/spending_dashboard.dart';
 import '../../../core/utils/location_service.dart';
+import '../../../core/utils/auth_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final provider = context.read<ShoppingProvider>();
     provider.loadItems();
     provider.loadCategories();
+    provider.syncCloudToLocal();
     _petalController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -215,16 +217,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           IconButton(icon: const Icon(Icons.bar_chart), tooltip: "So sánh chợ", onPressed: () => Navigator.pushNamed(context, '/compare-market')),
           IconButton(icon: const Icon(Icons.auto_awesome), tooltip: "Smart Shopping AI", onPressed: () => Navigator.pushNamed(context, '/smart-ai')),
           IconButton(icon: const Icon(Icons.document_scanner), tooltip: "Quét hóa đơn", onPressed: () => Navigator.pushNamed(context, '/ocr-scanner')),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: "Đăng xuất",
+            onPressed: () async {
+              await AuthService().signOut();
+              if (mounted) Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(backgroundColor: Colors.red, child: const Icon(Icons.add), onPressed: () => Navigator.pushNamed(context, "/add-item")),
       body: Stack(
         children: [
           _buildTetBackground(),
-          provider.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
+          Column(
                   children: [
+                    if (provider.isLoading && provider.items.isEmpty)
+                      const LinearProgressIndicator(color: Colors.red),
                     Expanded(
                       flex: 4,
                       child: SingleChildScrollView(
@@ -243,7 +253,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     Expanded(
                       flex: 3,
-                      child: Column(
+                      child: provider.items.isEmpty
+                          ? const Center(
+                              child: Text(
+                                "🛒 Danh sách đang trống!\nBấm + hoặc Quét đơn để bắt đầu nhé.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.white70, fontSize: 16),
+                              ),
+                            )
+                          : Column(
                         children: [
                           Expanded(
                             child: ListView.builder(
