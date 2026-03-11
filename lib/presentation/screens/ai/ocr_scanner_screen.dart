@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../core/utils/ai_service.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
+import '../../../core/utils/sync_service.dart';
 
 class OCRScannerScreen extends StatefulWidget {
   const OCRScannerScreen({super.key});
@@ -17,6 +18,7 @@ class OCRScannerScreen extends StatefulWidget {
 
 class _OCRScannerScreenState extends State<OCRScannerScreen> {
   final ImagePicker _picker = ImagePicker();
+  final SyncService _syncService = SyncService();
   File? _imageFile;
   bool _isAnalyzing = false;
   List<Map<String, dynamic>> _extractedItems = [];
@@ -57,6 +59,9 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
         _isAnalyzing = false;
         if (items.isEmpty) {
           _error = "Không nhận diện được mặt hàng nào. Hãy thử chụp rõ hơn nhé!";
+        } else {
+          // Sync to Cloud Backend
+          _syncService.uploadOCRHistory(items);
         }
       });
     } catch (e) {

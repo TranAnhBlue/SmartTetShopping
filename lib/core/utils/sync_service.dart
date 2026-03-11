@@ -20,6 +20,72 @@ class SyncService {
   CollectionReference get _luckyMoneyCollection =>
       _firestore.collection('users').doc(_userId).collection('lucky_money');
 
+  CollectionReference get _chatHistoryCollection =>
+      _firestore.collection('users').doc(_userId).collection('chat_history');
+
+  CollectionReference get _ocrHistoryCollection =>
+      _firestore.collection('users').doc(_userId).collection('ocr_history');
+
+  DocumentReference get _profileDoc =>
+      _firestore.collection('users').doc(_userId).collection('profile').doc('settings');
+
+  /// Uploads AI Chat/Advice History
+  Future<void> uploadChatHistory(String prompt, String advice, List<Map<String, dynamic>> items) async {
+    if (_userId == null) return;
+    try {
+      await _chatHistoryCollection.add({
+        'prompt': prompt,
+        'advice': advice,
+        'suggestedItems': items,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      debugPrint("✅ AI History synced to Cloud");
+    } catch (e) {
+      debugPrint("❌ AI History sync failed: $e");
+    }
+  }
+
+  /// Uploads OCR Scanning Result
+  Future<void> uploadOCRHistory(List<Map<String, dynamic>> items) async {
+    if (_userId == null || items.isEmpty) return;
+    try {
+      await _ocrHistoryCollection.add({
+        'items': items,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      debugPrint("✅ OCR History synced to Cloud");
+    } catch (e) {
+      debugPrint("❌ OCR History sync failed: $e");
+    }
+  }
+
+  /// Saves Tết Budget
+  Future<void> saveBudget(double amount) async {
+    if (_userId == null) return;
+    try {
+      await _profileDoc.set({'tet_budget': amount}, SetOptions(merge: true));
+      debugPrint("✅ Budget synced to Cloud");
+    } catch (e) {
+      debugPrint("❌ Budget sync failed: $e");
+    }
+  }
+
+  Stream<double> listenToBudget() {
+    if (_userId == null) return Stream.value(0.0);
+    return _profileDoc.snapshots().map((doc) => (doc.data() as Map<String, dynamic>?)?['tet_budget']?.toDouble() ?? 0.0);
+  }
+
+  Stream<List<Map<String, dynamic>>> listenToChatHistory() {
+    if (_userId == null) return Stream.value([]);
+    return _chatHistoryCollection
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => {
+              'id': doc.id,
+              ...doc.data() as Map<String, dynamic>
+            }).toList());
+  }
+
   /// Uploads a single item to Firestore
   Future<void> uploadItem(ShoppingItem item) async {
     if (_userId == null) return;

@@ -44,26 +44,81 @@ class SpendingDashboard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "TỔNG CHI PHÍ DỰ KIẾN",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.1,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "NGÂN SÁCH TẾT DỰ KIẾN",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _showBudgetDialog(context, provider),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)),
+                  child: const Icon(Icons.edit, size: 14, color: Colors.white),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
-            currency.format(total),
+            currency.format(provider.tetBudget),
             style: const TextStyle(
-              fontSize: 26,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
+          // Progress Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget).clamp(0, 1),
+              backgroundColor: Colors.white24,
+              color: total > provider.tetBudget ? Colors.orangeAccent : Colors.white,
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Đã dùng: ${provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget * 100).toStringAsFixed(1)}%",
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
+              Text(
+                "Còn lại: ${currency.format((provider.tetBudget - total).clamp(0, double.infinity))}",
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Divider(color: Colors.white.withOpacity(0.2)),
+          const SizedBox(height: 16),
+          const Text(
+            "TỔNG CHI PHÍ DANH SÁCH",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            currency.format(total),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
           const SizedBox(height: 20),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -94,6 +149,35 @@ class SpendingDashboard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBudgetDialog(BuildContext context, ShoppingProvider provider) {
+    final controller = TextEditingController(text: provider.tetBudget.toInt().toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Đặt Ngân Sách Tết"),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: "Số tiền (VND)",
+            hintText: "Ví dụ: 10000000",
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
+          ElevatedButton(
+            onPressed: () {
+              final amount = double.tryParse(controller.text) ?? 0;
+              provider.setBudget(amount);
+              Navigator.pop(context);
+            },
+            child: const Text("Lưu lại"),
           ),
         ],
       ),

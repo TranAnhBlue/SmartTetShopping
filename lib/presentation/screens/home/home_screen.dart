@@ -185,7 +185,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           selected: selected,
           selectedColor: Colors.orange,
           backgroundColor: Colors.white,
-          labelStyle: TextStyle(color: selected ? Colors.white : Colors.red, fontWeight: FontWeight.bold),
+          showCheckmark: true,
+          checkmarkColor: Colors.white,
+          labelStyle: TextStyle(
+            color: selected ? Colors.white : Colors.red,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
           onSelected: (_) => onTap(),
         ),
       );
@@ -424,6 +430,6 @@ class _CategoryFilterDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 55.0;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant _CategoryFilterDelegate oldDelegate) => true;
 }
 

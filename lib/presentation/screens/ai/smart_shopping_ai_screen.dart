@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/ai_service.dart';
+import '../../../core/utils/sync_service.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
 
@@ -12,9 +13,11 @@ class SmartShoppingAIScreen extends StatefulWidget {
   State<SmartShoppingAIScreen> createState() => _SmartShoppingAIScreenState();
 }
 
+
 class _SmartShoppingAIScreenState extends State<SmartShoppingAIScreen> {
   final TextEditingController _controller = TextEditingController();
   final AIService _aiService = AIService();
+  final SyncService _syncService = SyncService();
   
   bool _isLoading = false;
   String _aiAdvice = "";
@@ -41,6 +44,10 @@ class _SmartShoppingAIScreenState extends State<SmartShoppingAIScreen> {
         _suggestedItemsOutput = listResult;
         _aiAdvice = adviceResult;
       });
+
+      // 3. Sync to Cloud Backend
+      await _syncService.uploadChatHistory(prompt, adviceResult, listResult);
+
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Lỗi AI: $e")),

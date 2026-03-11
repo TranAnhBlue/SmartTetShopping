@@ -44,7 +44,9 @@ class ShoppingProvider extends ChangeNotifier {
       this._getCategories,
       this._seedPrices,
       this._getPricesByItem
-      );
+      ) {
+    startBudgetSync();
+  }
 
   /// =====================================================
   /// STATE
@@ -65,6 +67,20 @@ class ShoppingProvider extends ChangeNotifier {
   final Set<int> _generatedItems = {};
 
   bool isLoading = false;
+  double tetBudget = 0.0;
+
+  void startBudgetSync() {
+    _syncService.listenToBudget().listen((budget) {
+      tetBudget = budget;
+      notifyListeners();
+    });
+  }
+
+  Future<void> setBudget(double amount) async {
+    tetBudget = amount;
+    await _syncService.saveBudget(amount);
+    notifyListeners();
+  }
 
   /// =====================================================
   /// FILTERED ITEMS
@@ -171,6 +187,15 @@ class ShoppingProvider extends ChangeNotifier {
       await addItemUsecase(item);
     }
     await loadItems();
+
+    // Sync to cloud
+    for (final item in newItems) {
+      // Find the item with assigned ID from local DB to sync correctly
+      final syncedItem = items.firstWhere((e) => e.name == item.name && e.categoryId == item.categoryId, orElse: () => item);
+      if (syncedItem.id != null) {
+        await _syncService.uploadItem(syncedItem);
+      }
+    }
   }
 
   int getCategoryIdByName(String name) {
