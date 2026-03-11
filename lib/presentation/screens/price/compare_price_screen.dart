@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../domain/entities/market_total_cost.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/shopping_provider.dart';
+import '../map/map_screen.dart';
 
 class ComparePriceScreen extends StatefulWidget {
   final int itemId;
@@ -316,12 +317,31 @@ class _ComparePriceScreenState extends State<ComparePriceScreen> {
             ],
           ),
 
-          Text(
-            currency.format(market.totalCost),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Text(
+                currency.format(market.totalCost),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.directions, color: Colors.blue),
+                tooltip: "Chỉ đường",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapScreen(
+                        destination: market.marketName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

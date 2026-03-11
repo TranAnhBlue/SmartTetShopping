@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../domain/entities/market_total_cost.dart';
 import '../../providers/price_provider.dart';
+import '../map/map_screen.dart';
 
 class CompareMarketPremiumScreen extends StatefulWidget {
   const CompareMarketPremiumScreen({super.key});
@@ -101,8 +102,10 @@ class _CompareMarketPremiumScreenState
         ? a.totalCost.compareTo(b.totalCost)
         : b.totalCost.compareTo(a.totalCost));
 
-    final cheapest = data.first;
-    final expensive = data.last;
+    // Always calculate cheapest and expensive by their actual values, not their current sorted position
+    final sortedData = [...data]..sort((a, b) => a.totalCost.compareTo(b.totalCost));
+    final cheapest = sortedData.first;
+    final expensive = sortedData.last;
 
     return Scaffold(
       appBar: AppBar(
@@ -173,7 +176,7 @@ class _CompareMarketPremiumScreenState
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        "💡 Buy at ${cheapest.marketName} saves ${currency.format(diff)}",
+        "💡 Mua tại ${cheapest.marketName} tiết kiệm được ${currency.format(diff)}",
         style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -275,12 +278,31 @@ class _CompareMarketPremiumScreenState
             ],
           ),
 
-          Text(
-            currency.format(market.totalCost),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Text(
+                currency.format(market.totalCost),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.directions, color: Colors.blue),
+                tooltip: "Chỉ đường",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapScreen(
+                        destination: market.marketName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
