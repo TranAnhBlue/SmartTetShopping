@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'dart:ui';
 import '../../../domain/entities/lucky_money.dart';
 import '../../providers/lucky_money_provider.dart';
+import 'widgets/lucky_draw_dialog.dart';
 
 class LuckyMoneyScreen extends StatefulWidget {
   const LuckyMoneyScreen({super.key});
@@ -53,6 +56,7 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
           return Column(
             children: [
               _buildSummaryHeader(provider),
+              if (provider.luckyMoneyList.isNotEmpty) _buildAnalyticsSection(provider),
               Expanded(
                 child: provider.luckyMoneyList.isEmpty
                     ? _buildEmptyState()
@@ -62,52 +66,133 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddLuckyMoneyDialog(context),
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton.small(
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => const LuckyDrawDialog(),
+            ),
+            backgroundColor: Colors.orange,
+            heroTag: "luckydraw",
+            child: const Icon(Icons.casino, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            onPressed: () => _showAddLuckyMoneyDialog(context),
+            backgroundColor: Colors.red,
+            child: const Icon(Icons.add, color: Colors.white),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSummaryHeader(LuckyMoneyProvider provider) {
     return Container(
-      padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.redAccent, Colors.red],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.red.withOpacity(0.8), Colors.redAccent.withOpacity(0.6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildStatItem("Tổng ngân sách", 
+                        "${currencyFormat.format(provider.totalBudget)}đ", Colors.white),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.account_balance_wallet, color: Colors.white, size: 28),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem("Đã chuẩn bị", 
+                        "${currencyFormat.format(provider.preparedAmount)}đ", Colors.white),
+                    Container(width: 1, height: 30, color: Colors.white24),
+                    _buildStatItem("Đã tặng", 
+                        "${currencyFormat.format(provider.gaveAmount)}đ", Colors.white),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
-      child: Column(
+    );
+  }
+
+  Widget _buildAnalyticsSection(LuckyMoneyProvider provider) {
+    final data = provider.getGroupPercentages();
+    if (data.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      height: 180,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+      ),
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildStatItem("Tổng ngân sách", 
-                  "${currencyFormat.format(provider.totalBudget)}đ", Colors.white),
-              const Icon(Icons.account_balance_wallet, color: Colors.white70),
-            ],
+          Expanded(
+            flex: 2,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 30,
+                sections: data.entries.map((e) {
+                  return PieChartSectionData(
+                    color: _getGroupColor(e.key),
+                    value: e.value,
+                    title: '',
+                    radius: 12,
+                  );
+                }).toList(),
+              ),
+            ),
           ),
-          const Divider(color: Colors.white24, height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem("Đã chuẩn bị", 
-                  "${currencyFormat.format(provider.preparedAmount)}đ", Colors.white),
-              _buildStatItem("Đã tặng", 
-                  "${currencyFormat.format(provider.gaveAmount)}đ", Colors.white),
-            ],
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: data.entries.map((e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  children: [
+                    Container(width: 10, height: 10, color: _getGroupColor(e.key)),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(e.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500))),
+                    Text("${currencyFormat.format(e.value)}đ", style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+              )).toList(),
+            ),
           ),
         ],
       ),
@@ -178,7 +263,7 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
             trailing: PopupMenuButton<String>(
               onSelected: (value) {
                 if (value == 'edit') {
-                  // TODO: Edit
+                  _showEditLuckyMoneyDialog(context, item);
                 } else if (value == 'delete') {
                   provider.deleteLuckyMoney(item.id!);
                 } else if (value == 'toggle_prepared') {
@@ -196,8 +281,27 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
                   value: 'toggle_gave',
                   child: Text(item.isGave == 1 ? 'Chưa tặng' : 'Đã tặng'),
                 ),
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      const Text('Chỉnh sửa'),
+                    ],
+                  ),
+                ),
                 const PopupMenuDivider(),
-                const PopupMenuItem(value: 'delete', child: Text('Xóa', style: TextStyle(color: Colors.red))),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                      const SizedBox(width: 8),
+                      const Text('Xóa', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -229,26 +333,42 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
   }
 
   void _showAddLuckyMoneyDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final amountController = TextEditingController();
-    String selectedGroup = 'Gia đình';
+    _showLuckyMoneyDialog(context);
+  }
+
+  void _showEditLuckyMoneyDialog(BuildContext context, LuckyMoney item) {
+    _showLuckyMoneyDialog(context, item: item);
+  }
+
+  void _showLuckyMoneyDialog(BuildContext context, {LuckyMoney? item}) {
+    final isEdit = item != null;
+    final nameController = TextEditingController(text: item?.recipient);
+    final amountController = TextEditingController(text: item?.amount.toInt().toString());
+    String selectedGroup = item?.group ?? 'Gia đình';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Thêm người nhận lì xì"),
+        title: Text(isEdit ? "Chỉnh sửa người nhận" : "Thêm người nhận lì xì"),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: "Họ và tên"),
+                decoration: const InputDecoration(
+                  labelText: "Họ và tên",
+                  prefixIcon: Icon(Icons.person),
+                ),
               ),
+              const SizedBox(height: 12),
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Số tiền (đ)"),
+                decoration: const InputDecoration(
+                  labelText: "Số tiền (đ)",
+                  prefixIcon: Icon(Icons.monetization_on),
+                ),
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
@@ -257,7 +377,10 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
                   DropdownMenuItem(value: e, child: Text(e))
                 ).toList(),
                 onChanged: (v) => selectedGroup = v!,
-                decoration: const InputDecoration(labelText: "Nhóm"),
+                decoration: const InputDecoration(
+                  labelText: "Nhóm",
+                  prefixIcon: Icon(Icons.group),
+                ),
               ),
             ],
           ),
@@ -265,20 +388,31 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () {
               if (nameController.text.isNotEmpty && amountController.text.isNotEmpty) {
                 final amount = double.tryParse(amountController.text) ?? 0;
-                context.read<LuckyMoneyProvider>().addLuckyMoney(
-                  LuckyMoney(
-                    recipient: nameController.text,
+                final provider = context.read<LuckyMoneyProvider>();
+                
+                if (isEdit) {
+                  provider.updateLuckyMoney(item.copyWith(
+                    recipient: nameController.text.trim(),
                     amount: amount,
                     group: selectedGroup,
-                  ),
-                );
+                  ));
+                } else {
+                  provider.addLuckyMoney(
+                    LuckyMoney(
+                      recipient: nameController.text.trim(),
+                      amount: amount,
+                      group: selectedGroup,
+                    ),
+                  );
+                }
                 Navigator.pop(context);
               }
             },
-            child: const Text("Lưu"),
+            child: Text(isEdit ? "Cập nhật" : "Lưu"),
           ),
         ],
       ),

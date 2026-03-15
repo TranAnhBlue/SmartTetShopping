@@ -17,6 +17,22 @@ class LuckyMoneyProvider with ChangeNotifier {
   double get preparedAmount => _luckyMoneyList.where((e) => e.isPrepared == 1).fold(0, (sum, e) => sum + e.amount);
   double get gaveAmount => _luckyMoneyList.where((e) => e.isGave == 1).fold(0, (sum, e) => sum + e.amount);
 
+  Map<String, double> getGroupPercentages() {
+    if (_luckyMoneyList.isEmpty) return {};
+    final totals = <String, double>{};
+    for (var item in _luckyMoneyList) {
+      totals[item.group] = (totals[item.group] ?? 0) + item.amount;
+    }
+    return totals;
+  }
+
+  LuckyMoney? getRandomRecipient() {
+    final candidates = _luckyMoneyList.where((e) => e.isGave == 0).toList();
+    if (candidates.isEmpty) return null;
+    candidates.shuffle();
+    return candidates.first;
+  }
+
   Future<void> loadLuckyMoney() async {
     _isLoading = true;
     notifyListeners();
