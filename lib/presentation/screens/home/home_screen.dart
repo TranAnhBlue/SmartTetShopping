@@ -10,6 +10,7 @@ import '../../widgets/tet_countdown.dart';
 import '../../widgets/spending_dashboard.dart';
 import '../../../core/utils/location_service.dart';
 import '../../../core/utils/auth_service.dart';
+import '../../../core/utils/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,6 +47,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     )..repeat();
     final random = Random();
     _petalPositions = List.generate(10, (_) => random.nextDouble());
+
+    // ⭐ Check Tet Reminder after data loads
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await provider.loadItems();
+      _checkTetReminder(provider);
+    });
+  }
+
+  void _checkTetReminder(ShoppingProvider provider) {
+    // Tết Đinh Mùi 2027: February 6
+    final tetDate = DateTime(2027, 2, 6);
+    final now = DateTime.now();
+    final daysLeft = tetDate.difference(now).inDays;
+
+    final unboughtItems = provider.items.where((item) => !item.isBought).length;
+
+    if (daysLeft >= 0) {
+      NotificationService().showTetReminder(
+        daysLeft: daysLeft,
+        itemsLeft: unboughtItems,
+      );
+    }
   }
 
   @override

@@ -25,6 +25,25 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       initializationSettings,
     );
+    
+    // ⭐ Request permissions for Android 13+
+    await requestPermissions();
+  }
+
+  Future<void> requestPermissions() async {
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+        
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
   }
 
   Future<void> showNotification({
@@ -51,6 +70,28 @@ class NotificationService {
       title,
       body,
       platformChannelSpecifics,
+    );
+  }
+
+  Future<void> showTetReminder({
+    required int daysLeft,
+    required int itemsLeft,
+  }) async {
+    String title = "🧧 Sắm Tết thôi nào!";
+    String body = "Còn $daysLeft ngày nữa là đến Tết. Bạn vẫn còn $itemsLeft món chưa sắm đâu nhé!";
+
+    if (daysLeft == 0) {
+      title = "🧧 Chúc mừng năm mới!";
+      body = "Tết đã đến rồi! Chúc bạn và gia đình một năm mới an khang thịnh vượng.";
+    } else if (itemsLeft == 0) {
+      title = "✨ Tuyệt vời!";
+      body = "Chỉ còn $daysLeft ngày nữa đến Tết và bạn đã sắm đủ đồ chưa vậy hả. Về quê ăn Tết cùng gia đình thôi!";
+    }
+
+    await showNotification(
+      id: 999, // Unique ID for Tet reminder
+      title: title,
+      body: body,
     );
   }
 }
