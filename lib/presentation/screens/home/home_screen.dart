@@ -14,6 +14,7 @@ import '../../widgets/tet_background.dart';
 import '../../widgets/quick_actions.dart';
 import '../../widgets/tet_banner.dart';
 import '../../widgets/category_filter_bar.dart';
+import '../../widgets/ai_smart_reminder.dart';
 import '../../../core/utils/location_service.dart';
 import '../../../core/utils/auth_service.dart';
 import '../../../core/utils/notification_service.dart';
@@ -230,6 +231,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: Column(
                   children: [
                     const TetBanner(),
+                    const AISmartReminder(),
                     const TetCountdown(),
                     const SpendingDashboard(),
                     const SizedBox(height: 12),

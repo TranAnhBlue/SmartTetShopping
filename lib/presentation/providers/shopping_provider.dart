@@ -17,10 +17,12 @@ import '../../domain/usecases/price/seed_prices_usecase.dart';
 import '../../domain/usecases/price/get_prices_by_item_usecase.dart';
 import '../../core/utils/sync_service.dart';
 import '../../core/utils/auth_service.dart';
+import '../../core/utils/ai_service.dart';
 
 class ShoppingProvider extends ChangeNotifier {
   final SyncService _syncService = SyncService();
   final AuthService _authService = AuthService();
+  final AIService _aiService = AIService();
 
   final AddItemUsecase addItemUsecase;
   final GetItemsUsecase getItemsUsecase;
@@ -72,6 +74,8 @@ class ShoppingProvider extends ChangeNotifier {
 
   bool isLoading = false;
   double tetBudget = 0.0;
+  String? aiSuggestion;
+  bool isAIThinking = false;
 
   void startBudgetSync() {
     _syncService.listenToBudget().listen((budget) {
@@ -115,10 +119,28 @@ class ShoppingProvider extends ChangeNotifier {
     try {
       items = await getItemsUsecase();
       await _loadCheapestMarkets();
+      updateAISuggestion(); // Trigger AI suggestion
     } catch (e) {
       debugPrint("Load Items Error: $e");
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateAISuggestion() async {
+    if (items.isEmpty || isAIThinking) return;
+    
+    isAIThinking = true;
+    notifyListeners();
+    
+    try {
+      final names = items.map((e) => e.name).toList();
+      aiSuggestion = await _aiService.getMissingItemsSuggestions(names);
+    } catch (e) {
+      debugPrint("AI Suggestion Error: $e");
+    } finally {
+      isAIThinking = false;
       notifyListeners();
     }
   }

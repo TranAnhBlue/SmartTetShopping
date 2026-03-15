@@ -57,7 +57,7 @@ class AIService {
 
   /// Analyzes a receipt image and extracts shopping items
   Future<List<Map<String, dynamic>>> analyzeReceipt(Uint8List imageBytes) async {
-    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
       throw Exception("Vui lòng cài đặt Gemini API Key để sử dụng tính năng này.");
     }
 
@@ -98,7 +98,7 @@ class AIService {
 
   /// Provides expert advice on choosing ingredients or traditional Tet recipes
   Future<String> getTetAdvice(String query) async {
-    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
       return "💡 Chào bạn! Hãy cài đặt Gemini API Key để nhận lời khuyên chuyên sâu từ AI nhé!";
     }
 
@@ -116,7 +116,7 @@ class AIService {
 
   /// Generates personalized Tet greetings using AI
   Future<List<String>> generateGreeting(String group, {String? customQuery}) async {
-    if (AppConstants.geminiApiKey == "AIzaSyB2_tvkLWI4ktBogoei3Smt-kXPwONOzzk" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
        return _generateFallbackGreetings(group);
     }
 
@@ -141,6 +141,31 @@ class AIService {
     } catch (e) {
       print("Gemini Greeting Error: $e");
       return _generateFallbackGreetings(group);
+    }
+  }
+
+  /// Analyzes the current shopping list and suggests missing items
+  Future<String?> getMissingItemsSuggestions(List<String> currentItems) async {
+    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
+       return null;
+    }
+
+    try {
+      final prompt = '''
+      Bạn là chuyên gia về Tết Việt Nam. Đây là danh sách đồ sắm Tết hiện tại: [${currentItems.join(', ')}].
+      Dựa trên danh sách này, hãy đưa ra 1 lời nhắc nhở thông minh, ngắn gọn (tối đa 20 từ) về những món quan trọng CÒN THIẾU hoặc liên quan.
+      Ví dụ: "Bạn đã có thịt lợn, đừng quên mua thêm lá dong và gạo nếp để gói bánh chưng nhé!"
+      Nếu danh sách đã đầy đủ hoặc quá ít, hãy trả về một lời chúc ngắn vui vẻ về việc sắm Tết.
+      Chỉ trả về chuỗi văn bản thuần túy.
+      ''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      
+      return response.text?.trim();
+    } catch (e) {
+      print("Gemini Suggestion Error: $e");
+      return null;
     }
   }
 
