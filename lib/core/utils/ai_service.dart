@@ -114,6 +114,45 @@ class AIService {
     }
   }
 
+  /// Generates personalized Tet greetings using AI
+  Future<List<String>> generateGreeting(String group, {String? customQuery}) async {
+    if (AppConstants.geminiApiKey == "AIzaSyB2_tvkLWI4ktBogoei3Smt-kXPwONOzzk" || AppConstants.geminiApiKey.isEmpty) {
+       return _generateFallbackGreetings(group);
+    }
+
+    try {
+      final prompt = '''
+      Bạn là chuyên gia về văn hóa Việt Nam. Hãy tạo 5 lời chúc Tết độc đáo, ý nghĩa và phù hợp với đối tượng: "$group".
+      ${customQuery != null ? 'Yêu cầu thêm: "$customQuery"' : ''}
+      Trả về kết quả dưới dạng JSON array các chuỗi (string).
+      Chỉ trả về chuỗi JSON ròng, không kèm markdown hay giải thích.
+      ''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+      
+      final text = response.text;
+      if (text == null) return _generateFallbackGreetings(group);
+
+      final cleanedText = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final List<dynamic> decoded = jsonDecode(cleanedText);
+      
+      return decoded.map((e) => e.toString()).toList();
+    } catch (e) {
+      print("Gemini Greeting Error: $e");
+      return _generateFallbackGreetings(group);
+    }
+  }
+
+  List<String> _generateFallbackGreetings(String group) {
+    // Basic templates if AI fails
+    final Map<String, List<String>> templates = {
+      'Gia đình': ["Chúc ông bà sống lâu trăm tuổi!", "Chúc bố mẹ vạn sự như ý!"],
+      'Bạn bè': ["Chúc năm mới sớm có người yêu!", "Năm mới tiền vào như nước!"],
+    };
+    return templates[group] ?? ["Chúc mừng năm mới an khang thịnh vượng!"];
+  }
+
   /// Keep the old logic as fallback
   List<Map<String, dynamic>> _generateFallbackList(String query) {
      final normalized = query.toLowerCase();

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class TetCountdown extends StatefulWidget {
@@ -12,8 +13,8 @@ class _TetCountdownState extends State<TetCountdown> {
   late Timer _timer;
   Duration _timeLeft = Duration.zero;
 
-  // Tet 2026 (Lunar New Year - Feb 17, 2026)
-  final DateTime _tetDate = DateTime(2026, 2, 17, 0, 0, 0);
+  // Tet 2027 (Lunar New Year - Feb 6, 2027)
+  final DateTime _tetDate = DateTime(2027, 2, 6, 0, 0, 0);
 
   @override
   void initState() {
@@ -46,53 +47,59 @@ class _TetCountdownState extends State<TetCountdown> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red.shade200, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("🧨", style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(
-                "ĐẾM NGƯỢC TẾT BÍNH NGỌ 2026",
-                style: TextStyle(
-                  color: Colors.red.shade900,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                  fontSize: 13,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95), // Solider background for visibility
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.orange.withOpacity(0.5), width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("🧧", style: TextStyle(fontSize: 18)),
+                    const SizedBox(width: 10),
+                    Text(
+                      "ĐẾM NGƯỢC TẾT 2027",
+                      style: TextStyle(
+                        fontFamily: 'PlayfairDisplay', // If available, otherwise default
+                        color: Colors.red.shade800,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2.0,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text("🧧", style: TextStyle(fontSize: 18)),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text("🧨", style: const TextStyle(fontSize: 20)),
-            ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildTimePart(_timeLeft.inDays, "NGÀY"),
+                    _buildTimePart(_timeLeft.inHours.remainder(24), "GIỜ"),
+                    _buildTimePart(_timeLeft.inMinutes.remainder(60), "PHÚT"),
+                    _buildTimePart(_timeLeft.inSeconds.remainder(60), "GIÂY"),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildTimePart(_timeLeft.inDays, "Ngày"),
-              _buildDivider(),
-              _buildTimePart(_timeLeft.inHours.remainder(24), "Giờ"),
-              _buildDivider(),
-              _buildTimePart(_timeLeft.inMinutes.remainder(60), "Phút"),
-              _buildDivider(),
-              _buildTimePart(_timeLeft.inSeconds.remainder(60), "Giây"),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -100,26 +107,44 @@ class _TetCountdownState extends State<TetCountdown> {
   Widget _buildTimePart(int value, String label) {
     return Column(
       children: [
-        Text(
-          value.toString().padLeft(2, '0'),
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-            fontFamily: 'monospace',
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.red.shade700, Colors.red.shade900],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(color: Colors.red.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
+            ],
+          ),
+          child: Text(
+            value.toString().padLeft(2, '0'),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.white, // High contrast
+              fontFamily: 'monospace',
+            ),
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            fontSize: 10,
-            color: Colors.red.shade300,
-            fontWeight: FontWeight.w500,
+            fontSize: 9,
+            color: Colors.red.shade400,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
           ),
         ),
       ],
     );
   }
+
+  // Removed _buildDivider as we use styled containers now
 
   Widget _buildDivider() {
     return Text(

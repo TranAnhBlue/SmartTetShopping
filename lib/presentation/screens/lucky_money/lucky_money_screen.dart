@@ -6,6 +6,7 @@ import 'dart:ui';
 import '../../../domain/entities/lucky_money.dart';
 import '../../providers/lucky_money_provider.dart';
 import 'widgets/lucky_draw_dialog.dart';
+import 'widgets/denomination_calculator_dialog.dart';
 
 class LuckyMoneyScreen extends StatefulWidget {
   const LuckyMoneyScreen({super.key});
@@ -47,6 +48,14 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
                     backgroundColor: Colors.green),
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.calculate),
+            tooltip: "Tính đổi tiền",
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => const DenominationCalculatorDialog(),
+            ),
           ),
         ],
         elevation: 0,

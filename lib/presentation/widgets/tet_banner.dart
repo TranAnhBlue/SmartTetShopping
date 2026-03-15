@@ -31,7 +31,7 @@ class TetBanner extends StatelessWidget {
             Text("🧧", style: TextStyle(fontSize: 28)),
             SizedBox(width: 10),
             Text(
-              "Chúc Mừng Năm Mới 2027",
+              "Chúc Mừng Năm Mới 2026",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
