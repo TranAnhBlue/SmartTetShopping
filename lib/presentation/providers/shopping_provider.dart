@@ -7,6 +7,7 @@ import '../../domain/usecases/item/add_item_usecase.dart';
 import '../../domain/usecases/item/delete_item_usecase.dart';
 import '../../domain/usecases/item/get_items_usecase.dart';
 import '../../domain/usecases/item/update_item_usecase.dart';
+import '../../domain/usecases/item/toggle_bought_usecase.dart';
 import '../../domain/usecases/price/get_cheapest_market_usecase.dart';
 import '../../domain/usecases/price/get_prices_with_market_usecase.dart';
 import '../../domain/usecases/price/get_total_cost_by_market_usecase.dart';
@@ -24,6 +25,7 @@ class ShoppingProvider extends ChangeNotifier {
   final GetItemsUsecase getItemsUsecase;
   final UpdateItemUsecase updateItemUsecase;
   final DeleteItemUsecase deleteItemUsecase;
+  final ToggleBoughtUsecase toggleBoughtUsecase;
 
   final GetPricesWithMarketUsecase _getPrices;
   final GetCheapestMarketUsecase _getCheapest;
@@ -38,6 +40,7 @@ class ShoppingProvider extends ChangeNotifier {
       this.getItemsUsecase,
       this.updateItemUsecase,
       this.deleteItemUsecase,
+      this.toggleBoughtUsecase,
       this._getPrices,
       this._getCheapest,
       this._getTotalCost,
@@ -249,22 +252,46 @@ class ShoppingProvider extends ChangeNotifier {
   /// =====================================================
 
   double getTotalEstimatedCost() {
-
     double total = 0;
-
     for (var item in filteredItems) {
-
       if (item.id == null) continue;
-
       final cheapest = cheapestMarkets[item.id!];
-
-      final price =
-          cheapest?['price'] ?? item.estimatedPrice;
-
+      final price = cheapest?['price'] ?? item.estimatedPrice;
       total += price * item.quantity;
     }
-
     return total;
+  }
+
+  /// Tổng tiền đã mua (các món đã tick)
+  double getTotalBoughtCost() {
+    double total = 0;
+    for (var item in filteredItems) {
+      if (!item.isBought || item.id == null) continue;
+      final cheapest = cheapestMarkets[item.id!];
+      final price = cheapest?['price'] ?? item.estimatedPrice;
+      total += price * item.quantity;
+    }
+    return total;
+  }
+
+  int get boughtCount => filteredItems.where((e) => e.isBought).length;
+  int get totalCount => filteredItems.length;
+
+  /// Toggle trạng thái đã mua
+  Future<void> toggleBought(ShoppingItem item) async {
+    await toggleBoughtUsecase(item);
+    final index = items.indexWhere((e) => e.id == item.id);
+    if (index != -1) {
+      items[index] = ShoppingItem(
+        id: item.id,
+        name: item.name,
+        categoryId: item.categoryId,
+        quantity: item.quantity,
+        estimatedPrice: item.estimatedPrice,
+        isBought: !item.isBought,
+      );
+    }
+    notifyListeners();
   }
 
   /// =====================================================

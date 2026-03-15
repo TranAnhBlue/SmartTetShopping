@@ -109,6 +109,52 @@ class SpendingDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Divider(color: Colors.white.withOpacity(0.2)),
+          const SizedBox(height: 10),
+          // ─── TIẾN ĐỘ MUA ───
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "TIẾN ĐỘ MUA",
+                      style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${provider.boughtCount}/${provider.totalCount} món",
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      "ĐÃ CHI",
+                      style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      CurrencyUtils.format(provider.getTotalBoughtCost()),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: provider.totalCount == 0 ? 0 : provider.boughtCount / provider.totalCount,
+              backgroundColor: Colors.white24,
+              color: Colors.greenAccent,
+              minHeight: 6,
+            ),
+          ),
           const SizedBox(height: 16),
           const Text(
             "TỔNG CHI PHÍ DANH SÁCH",
@@ -126,8 +172,8 @@ class SpendingDashboard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          // ...
-          const SizedBox(height: 20),
+          // ...\n          const SizedBox(height: 20),
+
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

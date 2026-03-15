@@ -391,6 +391,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           },
                           onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
                           onDelete: () => provider.deleteItem(item.id!),
+                          onToggleBought: () => provider.toggleBought(item),
                         );
                       },
                       childCount: pagedItems.length,

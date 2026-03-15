@@ -21,6 +21,7 @@ import 'domain/usecases/item/add_item_usecase.dart';
 import 'domain/usecases/item/get_items_usecase.dart';
 import 'domain/usecases/item/delete_item_usecase.dart';
 import 'domain/usecases/item/update_item_usecase.dart';
+import 'domain/usecases/item/toggle_bought_usecase.dart';
 
 /// Price Usecase
 import 'domain/usecases/price/add_price_usecase.dart';
@@ -76,6 +77,7 @@ Future<void> main() async {
   final getItemsUsecase = GetItemsUsecase(repository);
   final deleteItemUsecase = DeleteItemUsecase(repository);
   final updateItemUsecase = UpdateItemUsecase(repository);
+  final toggleBoughtUsecase = ToggleBoughtUsecase(repository);
 
   /// =========================
   /// PRICE USECASES
@@ -103,6 +105,7 @@ Future<void> main() async {
             getItemsUsecase,
             updateItemUsecase,
             deleteItemUsecase,
+            toggleBoughtUsecase,
             getPricesUsecase,
             cheapestUsecase,
             totalUsecase,
