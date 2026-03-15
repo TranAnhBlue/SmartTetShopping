@@ -16,6 +16,7 @@ class _MapScreenState extends State<MapScreen> {
   late final WebViewController _controller;
   bool _isLoading = true;
   String _errorMessage = '';
+  Position? _currentPosition; // Store position for reuse
 
   @override
   void initState() {
@@ -88,6 +89,8 @@ class _MapScreenState extends State<MapScreen> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      _currentPosition = position; // Cache for reuse
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã xác định được vị trí của bạn')),
@@ -95,7 +98,6 @@ class _MapScreenState extends State<MapScreen> {
       }
 
       // 2. Generate Google Maps Directions URL
-      // We force the 'origin' to be the coordinates we just fetched
       final String destinationEncoded = Uri.encodeComponent(widget.destination);
       final String origin = '${position.latitude},${position.longitude}';
       
@@ -114,29 +116,48 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _handleExternalScheme(String urlString) async {
+  /// Mở Google Maps app để bắt đầu chỉ đường thật sự
+  Future<void> _openNavigationInApp() async {
     try {
-      // Handle Google Maps intents specifically if possible
-      // or common schemes like maps:, tel:, etc.
-      final Uri url = Uri.parse(urlString);
-      
-      // For Android "intent:" schemes, they often contain a fallback URL or package info.
-      // url_launcher might need help with raw "intent:" strings.
-      if (urlString.startsWith('intent:')) {
-        // Simple attempt to launch, if it fails we just log it.
-        // Usually, the WebView should handle internal redirects to http if intent fails,
-        // but here we are in "prevent" mode.
-        await launchUrl(url, mode: LaunchMode.externalNonBrowserApplication);
-        return;
-      }
+      final destination = Uri.encodeComponent(widget.destination);
 
-      bool launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+      // 📍 Điểm xuất phát: Đại học FPT Hà Nội - Khu CNC Hòa Lạc
+      const double originLat = 21.0122;
+      const double originLon = 105.5258;
+
+      final mapsUri = Uri.parse(
+        'https://www.google.com/maps/dir/?api=1&origin=$originLat,$originLon&destination=$destination&travelmode=driving'
+      );
+
+      final launched = await launchUrl(mapsUri, mode: LaunchMode.externalApplication);
       if (!launched) {
-        debugPrint('Failed to launch external scheme: $urlString');
+        debugPrint('Could not open Google Maps');
       }
     } catch (e) {
+      debugPrint('Error opening navigation: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở Google Maps: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleExternalScheme(String urlString) async {
+    // Khi WebView nhận scheme ngoài http/https (ví dụ intent:, google.navigation:)
+    // ta chuyển sang mở Google Maps app thật sự thay vì cố parse URL phức tạp
+    if (urlString.startsWith('intent:') ||
+        urlString.startsWith('google.navigation:') ||
+        urlString.startsWith('maps:')) {
+      await _openNavigationInApp();
+      return;
+    }
+
+    try {
+      final Uri url = Uri.parse(urlString);
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
       debugPrint('Error launching external scheme: $e');
-      // If it's a complex intent, we might not be able to parse it as a standard Uri
     }
   }
 
@@ -194,11 +215,9 @@ class _MapScreenState extends State<MapScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _handleExternalScheme(
-          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(widget.destination + " gần nhất")}&hl=vi'
-        ),
-        label: const Text('Mở trong Google Maps'),
-        icon: const Icon(Icons.map),
+        onPressed: _openNavigationInApp,
+        label: const Text('Bắt đầu điều hướng'),
+        icon: const Icon(Icons.navigation),
         backgroundColor: Colors.red.shade800,
         foregroundColor: Colors.white,
       ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/constants/market_branches.dart';
 import '../../../domain/entities/market_total_cost.dart';
 import '../../providers/price_provider.dart';
 import '../../providers/shopping_provider.dart';
@@ -330,19 +331,54 @@ class _ComparePriceScreenState extends State<ComparePriceScreen> {
               IconButton(
                 icon: const Icon(Icons.directions, color: Colors.blue),
                 tooltip: "Chỉ đường",
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MapScreen(
-                        destination: market.marketName,
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _showBranchPicker(context, market.marketName),
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+  void _showBranchPicker(BuildContext context, String marketName) {
+    final branches = MarketBranches.getBranches(marketName);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(
+              children: [
+                const Icon(Icons.store, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(
+                  'Chọn chi nhánh $marketName',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          ...branches.map((branch) => ListTile(
+            leading: const Icon(Icons.location_on, color: Colors.blue),
+            title: Text(branch),
+            trailing: const Icon(Icons.navigation, color: Colors.red),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MapScreen(destination: branch),
+                ),
+              );
+            },
+          )),
+          const SizedBox(height: 16),
         ],
       ),
     );
