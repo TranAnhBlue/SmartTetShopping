@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/utils/currency_utils.dart';
 import '../../domain/entities/shopping_item.dart';
 import '../../domain/entities/category.dart';
 
@@ -147,6 +148,7 @@ class ShoppingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+
   String getCategoryName(int? categoryId) {
 
     if (categoryId == null) return "Unknown";
@@ -163,25 +165,13 @@ class ShoppingProvider extends ChangeNotifier {
   /// CRUD ITEM
   /// =====================================================
 
-  Future<void> addItem(
-      String name,
-      double price,
-      int quantity,
-      int categoryId,
-      ) async {
-
-    final item = ShoppingItem(
-      name: name,
-      categoryId: categoryId,
-      estimatedPrice: price,
-      quantity: quantity,
-    );
-
+  Future<void> addItem(ShoppingItem item) async {
     await addItemUsecase(item);
     await loadItems();
     
     // Sync to cloud
-    final newItem = items.firstWhere((e) => e.name == name && e.categoryId == categoryId);
+    // Try to find the item with the assigned ID from local list
+    final newItem = items.firstWhere((e) => e.name == item.name && e.categoryId == item.categoryId, orElse: () => item);
     await _syncService.uploadItem(newItem);
   }
 
@@ -193,8 +183,10 @@ class ShoppingProvider extends ChangeNotifier {
 
     // Sync to cloud
     for (final item in newItems) {
-      // Find the item with assigned ID from local DB to sync correctly
-      final syncedItem = items.firstWhere((e) => e.name == item.name && e.categoryId == item.categoryId, orElse: () => item);
+      final syncedItem = items.firstWhere(
+        (e) => e.name == item.name && e.categoryId == item.categoryId,
+        orElse: () => item,
+      );
       if (syncedItem.id != null) {
         await _syncService.uploadItem(syncedItem);
       }
@@ -395,6 +387,34 @@ class ShoppingProvider extends ChangeNotifier {
     for (var item in items) {
       await _syncService.uploadItem(item);
     }
+  }
+
+  /// 📤 Generate a formatted text for sharing
+  String generateShareText() {
+    if (items.isEmpty) return "Danh sách sắm Tết của tôi đang trống! 🧧";
+
+    // Tết Đinh Mùi 2027: February 6
+    final tetDate = DateTime(2027, 2, 6);
+    final daysLeft = tetDate.difference(DateTime.now()).inDays;
+    
+    StringBuffer sb = StringBuffer();
+    sb.writeln("🧧 DANH SÁCH SẮM TẾT 2027 🧧");
+    if (daysLeft >= 0) {
+      sb.writeln("📅 Còn $daysLeft ngày nữa đến Tết!");
+    }
+    sb.writeln("--------------------------");
+
+    for (var item in items) {
+      String status = item.isBought ? "[x]" : "[ ]";
+      sb.writeln("$status ${item.name} (x${item.quantity})");
+    }
+
+    sb.writeln("--------------------------");
+    sb.writeln("💰 Tổng cộng: ${CurrencyUtils.format(getTotalEstimatedCost())}");
+    sb.writeln("✅ Đã mua: $boughtCount/${items.length} món");
+    sb.writeln("\n#SmartTetShopping #SamTet2027");
+    
+    return sb.toString();
   }
 }
 

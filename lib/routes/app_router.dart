@@ -11,6 +11,7 @@ import '../presentation/screens/items/edit_item_screen.dart';
 import '../presentation/screens/price/item_price_screen.dart';
 import '../presentation/screens/lucky_money/lucky_money_screen.dart';
 import '../presentation/screens/lucky_money/greeting_screen.dart';
+import '../presentation/screens/ritual/ritual_checklist_screen.dart';
 import '../domain/entities/shopping_item.dart';
 
 class AppRouter {
@@ -50,6 +51,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LuckyMoneyScreen());
       case '/greetings':
         return MaterialPageRoute(builder: (_) => const GreetingScreen());
+      case '/ritual':
+        return MaterialPageRoute(builder: (_) => const RitualChecklistScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(body: Center(child: Text("Route not found"))),

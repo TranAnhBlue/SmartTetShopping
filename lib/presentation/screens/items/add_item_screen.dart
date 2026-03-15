@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../core/utils/ocr_service.dart';
+import '../../../domain/entities/shopping_item.dart';
 import 'scan_preview_screen.dart';
 
 class AddItemScreen extends StatefulWidget {
@@ -142,12 +143,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       priceController.text.replaceAll('.', ''),
                     );
 
-                    await context.read<ShoppingProvider>().addItem(
-                          nameController.text.trim(),
-                          price,
-                          int.parse(quantityController.text),
-                          selectedCategory!,
-                        );
+                    final item = ShoppingItem(
+                      name: nameController.text.trim(),
+                      estimatedPrice: price,
+                      quantity: int.parse(quantityController.text),
+                      categoryId: selectedCategory!,
+                    );
+
+                    await context.read<ShoppingProvider>().addItem(item);
 
                     if (mounted) Navigator.pop(context);
                   },

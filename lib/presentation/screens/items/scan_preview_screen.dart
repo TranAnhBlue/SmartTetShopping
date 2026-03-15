@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/shopping_provider.dart';
+import '../../../domain/entities/shopping_item.dart';
 
 class ScanPreviewScreen extends StatefulWidget {
   final List<Map<String, dynamic>> scannedItems;
@@ -112,22 +113,22 @@ class _ScanPreviewScreenState extends State<ScanPreviewScreen> {
     setState(() => isSaving = true);
     final provider = context.read<ShoppingProvider>();
     
-    final selectedItems = items.where((item) => item['selected'] == true).toList();
+    final selectedData = items.where((item) => item['selected'] == true).toList();
     
-    for (var item in selectedItems) {
-      await provider.addItem(
-        item['name'],
-        item['price'],
-        item['quantity'] ?? 1,
-        item['categoryId'],
-      );
-    }
+    final List<ShoppingItem> newItems = selectedData.map((data) => ShoppingItem(
+      name: data['name'],
+      estimatedPrice: data['price'],
+      quantity: data['quantity'] ?? 1,
+      categoryId: data['categoryId'],
+    )).toList();
+    
+    await provider.addItemsBatch(newItems);
     
     if (mounted) {
       Navigator.pop(context); // Close preview
       Navigator.pop(context); // Close add item screen
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Đã thêm ${selectedItems.length} món từ hóa đơn!")),
+        SnackBar(content: Text("Đã thêm ${newItems.length} món từ hóa đơn!")),
       );
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import '../../core/utils/currency_utils.dart';
 import '../providers/shopping_provider.dart';
 
@@ -43,6 +44,22 @@ class SpendingDashboard extends StatelessWidget {
                   decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(4)),
                   child: const Icon(Icons.edit, size: 14, color: Colors.white),
                 ),
+              ),
+              const Spacer(),
+              // ⭐ SHARE BUTTON
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.white70, size: 20),
+                tooltip: "Chia sẻ danh sách",
+                onPressed: () {
+                  final text = provider.generateShareText();
+                  Clipboard.setData(ClipboardData(text: text));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("📋 Đã sao chép danh sách vào bộ nhớ tạm!"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
               ),
             ],
           ),

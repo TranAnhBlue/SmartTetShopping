@@ -8,6 +8,10 @@ import '../../providers/shopping_provider.dart';
 import '../../widgets/item_card.dart';
 import '../../widgets/tet_countdown.dart';
 import '../../widgets/spending_dashboard.dart';
+import '../../widgets/tet_background.dart';
+import '../../widgets/quick_actions.dart';
+import '../../widgets/tet_banner.dart';
+import '../../widgets/category_filter_bar.dart';
 import '../../../core/utils/location_service.dart';
 import '../../../core/utils/auth_service.dart';
 import '../../../core/utils/notification_service.dart';
@@ -77,147 +81,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  Widget _buildTetBackground() {
-    return Stack(
-      children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF8B0000), Color(0xFFD32F2F), Color(0xFFFFC107)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        Positioned(top: -120, left: -80, child: _buildGlow()),
-        Positioned(bottom: -120, right: -80, child: _buildGlow()),
-        AnimatedBuilder(animation: _petalController, builder: (_, __) => _buildPetals()),
-      ],
-    );
-  }
 
-  Widget _buildGlow() => Container(
-        width: 280,
-        height: 280,
-        decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Colors.orange.withOpacity(0.5), Colors.transparent])),
-      );
 
-  Widget _buildPetals() {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    return Stack(
-      children: List.generate(_petalPositions.length, (index) {
-        final progress = (_petalController.value + index * 0.12) % 1;
-        return Positioned(
-          top: progress * screenHeight,
-          left: (_petalPositions[index] + sin(progress * 2 * pi) * 0.05) * screenWidth,
-          child: Transform.rotate(
-            angle: progress * 2 * pi,
-            child: Transform.scale(
-              scale: 0.8 + progress * 0.4,
-              child: Text("🌸", style: TextStyle(fontSize: 24, color: Colors.white.withOpacity(0.6))),
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildTetBanner() => GestureDetector(
-        onTap: () => LocationService().checkProximity(21.0285, 105.8542, "Chợ Đồng Xuân"),
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Colors.red, Colors.orange]),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black.withOpacity(0.2))],
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("🧧", style: TextStyle(fontSize: 28)),
-              SizedBox(width: 10),
-              Text("Chúc Mừng Năm Mới 2026", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-            ],
-          ),
-        ),
-      );
-
-  Widget _buildQuickActions() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          _buildActionItem("Lì xì 💸", Colors.orange, () => Navigator.pushNamed(context, '/lucky-money')),
-          const SizedBox(width: 8),
-          _buildActionItem("Lời chúc 💌", Colors.blue, () => Navigator.pushNamed(context, '/greetings')),
-          const SizedBox(width: 8),
-          _buildActionItem("Quét đơn 📸", Colors.green, () => Navigator.pushNamed(context, '/ocr-scanner')),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionItem(String label, Color color, VoidCallback onTap) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [BoxShadow(color: color.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))],
-          ),
-          child: Center(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryFilter(ShoppingProvider provider) => SizedBox(
-        height: 55,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          scrollDirection: Axis.horizontal,
-          children: [
-            _chip("Tất cả", provider.selectedCategoryId == null, () {
-              provider.setCategoryFilter(null);
-              setState(() => _currentPage = 1);
-            }),
-            ...provider.categories.map((cat) => _chip(cat.name, provider.selectedCategoryId == cat.id, () {
-                  provider.setCategoryFilter(cat.id);
-                  setState(() => _currentPage = 1);
-                })),
-          ],
-        ),
-      );
-
-  Widget _chip(String text, bool selected, VoidCallback onTap) => Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: ChoiceChip(
-          label: Text(text),
-          selected: selected,
-          selectedColor: Colors.orange,
-          backgroundColor: Colors.white,
-          showCheckmark: true,
-          checkmarkColor: Colors.white,
-          labelStyle: TextStyle(
-            color: selected ? Colors.white : Colors.red,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-          onSelected: (_) => onTap(),
-        ),
-      );
 
   Widget _buildBarItem(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
@@ -350,7 +215,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       body: Stack(
         children: [
-          _buildTetBackground(),
+          TetBackground(
+            animation: _petalController,
+            petalPositions: _petalPositions,
+          ),
           CustomScrollView(
             slivers: [
               if (provider.isLoading && provider.items.isEmpty)
@@ -359,11 +227,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               SliverToBoxAdapter(
                 child: Column(
                   children: [
-                    _buildTetBanner(),
+                    const TetBanner(),
                     const TetCountdown(),
                     const SpendingDashboard(),
                     const SizedBox(height: 12),
-                    _buildQuickActions(),
+                    QuickActions(
+                      onLuckyMoney: () => Navigator.pushNamed(context, '/lucky-money'),
+                      onGreetings: () => Navigator.pushNamed(context, '/greetings'),
+                      onScanner: () => Navigator.pushNamed(context, '/ocr-scanner'),
+                      onRitual: () => Navigator.pushNamed(context, '/ritual'),
+                    ),
                     const SizedBox(height: 12),
                   ],
                 ),
@@ -374,7 +247,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 delegate: _CategoryFilterDelegate(
                   child: Container(
                     color: Colors.transparent, // Background will show through
-                    child: _buildCategoryFilter(provider),
+                    child: CategoryFilterBar(
+                      provider: provider,
+                      onCategorySelected: (id) {
+                        provider.setCategoryFilter(id);
+                        setState(() => _currentPage = 1);
+                      },
+                    ),
                   ),
                 ),
               ),
