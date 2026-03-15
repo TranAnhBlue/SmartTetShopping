@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
 import 'presentation/widgets/festival/tet_overlay.dart';
+import 'presentation/widgets/confetti_overlay.dart';
 import 'core/utils/auth_service.dart';
 import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/auth/login_screen.dart';
@@ -53,11 +54,13 @@ class MyApp extends StatelessWidget {
 
       /// ⭐ Overlay Tết toàn app
       builder: (context, child) {
-        return Stack(
-          children: [
-            child!,
-            const TetOverlay(),
-          ],
+        return ConfettiOverlay(
+          child: Stack(
+            children: [
+              child!,
+              const TetOverlay(),
+            ],
+          ),
         );
       },
     );

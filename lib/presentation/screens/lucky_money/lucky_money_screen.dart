@@ -7,6 +7,7 @@ import '../../../domain/entities/lucky_money.dart';
 import '../../providers/lucky_money_provider.dart';
 import 'widgets/lucky_draw_dialog.dart';
 import 'widgets/denomination_calculator_dialog.dart';
+import '../../widgets/confetti_overlay.dart';
 
 class LuckyMoneyScreen extends StatefulWidget {
   const LuckyMoneyScreen({super.key});
@@ -230,6 +231,18 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
             style: TextStyle(color: Colors.grey, fontSize: 16)),
           const Text("Nhấn (+) để thêm người nhận", 
             style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => context.read<LuckyMoneyProvider>().seedLuckyMoney(),
+            icon: const Icon(Icons.auto_awesome, color: Colors.orange),
+            label: const Text("Gợi ý danh sách mẫu", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Colors.red),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
         ],
       ),
     );
@@ -278,7 +291,11 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
                 } else if (value == 'toggle_prepared') {
                   provider.updateLuckyMoney(item.copyWith(isPrepared: item.isPrepared == 1 ? 0 : 1));
                 } else if (value == 'toggle_gave') {
-                  provider.updateLuckyMoney(item.copyWith(isGave: item.isGave == 1 ? 0 : 1));
+                  final isGave = item.isGave == 1;
+                  provider.updateLuckyMoney(item.copyWith(isGave: isGave ? 0 : 1));
+                  if (!isGave) {
+                    ConfettiOverlay.of(context)?.play();
+                  }
                 }
               },
               itemBuilder: (context) => [

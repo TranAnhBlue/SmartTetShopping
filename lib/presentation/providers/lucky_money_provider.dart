@@ -33,6 +33,20 @@ class LuckyMoneyProvider with ChangeNotifier {
     return candidates.first;
   }
 
+  Future<void> seedLuckyMoney() async {
+    final samples = [
+      LuckyMoney(recipient: "Ông Bà", amount: 500000, group: "Gia đình", isPrepared: 1),
+      LuckyMoney(recipient: "Bố Mẹ", amount: 200000, group: "Gia đình", isPrepared: 1),
+      LuckyMoney(recipient: "Em trai", amount: 50000, group: "Gia đình"),
+      LuckyMoney(recipient: "Bạn thân", amount: 100000, group: "Bạn bè"),
+      LuckyMoney(recipient: "Sếp Tổng", amount: 500000, group: "Đồng nghiệp"),
+    ];
+
+    for (final item in samples) {
+      await addLuckyMoney(item);
+    }
+  }
+
   Future<void> loadLuckyMoney() async {
     _isLoading = true;
     notifyListeners();

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
+import '../../widgets/confetti_overlay.dart';
+
 import '../../args/item_price_args.dart';
 import '../../providers/shopping_provider.dart';
 import '../../widgets/item_card.dart';
@@ -293,7 +295,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           },
                           onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
                           onDelete: () => provider.deleteItem(item.id!),
-                          onToggleBought: () => provider.toggleBought(item),
+                          onToggleBought: () {
+                            provider.toggleBought(item);
+                            if (!item.isBought) {
+                              ConfettiOverlay.of(context)?.play();
+                            }
+                          },
                         );
                       },
                       childCount: pagedItems.length,
