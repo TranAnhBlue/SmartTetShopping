@@ -9,6 +9,8 @@ import '../../../core/utils/currency_utils.dart';
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
 import '../../../core/utils/sync_service.dart';
+import './live_camera_scanner_screen.dart';
+import 'package:camera/camera.dart';
 
 class OCRScannerScreen extends StatefulWidget {
   const OCRScannerScreen({super.key});
@@ -29,20 +31,34 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? pickedFile = await _picker.pickImage(
-        source: source,
-        maxWidth: 1600,
-        maxHeight: 1600,
-        imageQuality: 85,
-      );
+      XFile? pickedFile;
+      
+      if (source == ImageSource.camera) {
+        // Use custom live camera screen
+        pickedFile = await Navigator.push<XFile>(
+          context,
+          MaterialPageRoute(builder: (context) => const LiveCameraScannerScreen()),
+        );
+      } else {
+        // Use gallery picker
+        pickedFile = await _picker.pickImage(
+          source: source,
+          maxWidth: 1600,
+          maxHeight: 1600,
+          imageQuality: 85,
+        );
+      }
 
       if (pickedFile != null) {
+        debugPrint('Đã nhận được ảnh: ${pickedFile.path}');
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _imageFile = File(pickedFile!.path);
           _extractedItems = [];
           _error = null;
         });
         _analyzeImage(pickedFile);
+      } else {
+        debugPrint('Không nhận được ảnh từ camera/gallery');
       }
     } catch (e) {
       setState(() => _error = "Lỗi khi chọn ảnh: $e");

@@ -20,7 +20,7 @@ class AIService {
   /// Generates a suggested shopping list for Tet based on Gemini AI
   Future<List<Map<String, dynamic>>> generateShoppingList(String query) async {
     // Chỉ trả về fallback nếu key vẫn là placeholder mặc định
-    if (AppConstants.geminiApiKey == "AIzaSyBCQ0ItbqpZGHpCr_OVVVRZOQS6bP9PaZg" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyApBs1vYYRTh5-uJN-H0APiAofBk1GcdYE" || AppConstants.geminiApiKey.isEmpty) {
       return _generateFallbackList(query);
     }
 
@@ -57,7 +57,7 @@ class AIService {
 
   /// Analyzes a receipt image and extracts shopping items
   Future<List<Map<String, dynamic>>> analyzeReceipt(Uint8List imageBytes) async {
-    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyCsIhYoVXQbjYgfNdYa9Ui8lyVZLGZL5uw" || AppConstants.geminiApiKey.isEmpty) {
       throw Exception("Vui lòng cài đặt Gemini API Key để sử dụng tính năng này.");
     }
 
@@ -98,7 +98,7 @@ class AIService {
 
   /// Provides expert advice on choosing ingredients or traditional Tet recipes
   Future<String> getTetAdvice(String query) async {
-    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyDJaIkEe3rfbD2TSuN16c393ig_RDRJ6D8" || AppConstants.geminiApiKey.isEmpty) {
       return "💡 Chào bạn! Hãy cài đặt Gemini API Key để nhận lời khuyên chuyên sâu từ AI nhé!";
     }
 
@@ -116,7 +116,7 @@ class AIService {
 
   /// Generates personalized Tet greetings using AI
   Future<List<String>> generateGreeting(String group, {String? customQuery}) async {
-    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyDJaIkEe3rfbD2TSuN16c393ig_RDRJ6D8" || AppConstants.geminiApiKey.isEmpty) {
        return _generateFallbackGreetings(group);
     }
 
@@ -146,7 +146,7 @@ class AIService {
 
   /// Analyzes the current shopping list and suggests missing items
   Future<String?> getMissingItemsSuggestions(List<String> currentItems) async {
-    if (AppConstants.geminiApiKey == "AIzaSyAvm4N29lY2suFORiTHKWyMagfuDN_a9G0" || AppConstants.geminiApiKey.isEmpty) {
+    if (AppConstants.geminiApiKey == "AIzaSyDeyOYzI_HvASuMDeLx1lMkLZ83HEoOE3c" || AppConstants.geminiApiKey.isEmpty) {
        return null;
     }
 
