@@ -174,7 +174,7 @@ class SpendingDashboard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const Text(
-            "TỔNG CHI PHÍ DANH SÁCH",
+            "CHI PHÍ TỐI ƯU (CHỌN MUA NƠI RẺ NHẤT)",
             style: TextStyle(
               color: Colors.white70,
               fontSize: 11,
@@ -227,7 +227,8 @@ class SpendingDashboard extends StatelessWidget {
   }
 
   void _showBudgetDialog(BuildContext context, ShoppingProvider provider) {
-    final controller = TextEditingController(text: provider.tetBudget.toInt().toString());
+    final controller = TextEditingController(
+        text: CurrencyUtils.formatNumber(provider.tetBudget.toInt()));
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -235,16 +236,22 @@ class SpendingDashboard extends StatelessWidget {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            CurrencyTextInputFormatter(),
+          ],
           decoration: const InputDecoration(
             labelText: "Số tiền (VND)",
-            hintText: "Ví dụ: 10000000",
+            hintText: "Ví dụ: 10.000.000",
           ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Hủy")),
           ElevatedButton(
             onPressed: () {
-              final amount = double.tryParse(controller.text) ?? 0;
+              // Parse the raw number by removing formatting
+              final digitsOnly = controller.text.replaceAll(RegExp(r'[^\d]'), '');
+              final amount = double.tryParse(digitsOnly) ?? 0;
               provider.setBudget(amount);
               Navigator.pop(context);
             },

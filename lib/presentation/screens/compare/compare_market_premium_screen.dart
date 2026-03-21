@@ -175,12 +175,26 @@ class _CompareMarketPremiumScreenState
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        "💡 Mua tại ${cheapest.marketName} tiết kiệm được ${currency.format(diff)}",
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Column(
+        children: [
+          Text(
+            "💡 Mua tại ${cheapest.marketName} tiết kiệm được ${currency.format(diff)}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "(Chi phí khi mua TẤT CẢ các món tại cùng 1 chợ)",
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

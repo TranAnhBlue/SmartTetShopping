@@ -88,10 +88,10 @@ class PriceDao {
     return await db.rawQuery('''
     SELECT 
       m.name AS market_name,
-      SUM(p.price * i.quantity) AS total_cost
-    FROM item_prices p
-    JOIN markets m ON p.market_id = m.id
-    JOIN items i ON p.item_id = i.id
+      SUM(COALESCE(p.price, i.estimated_price) * i.quantity) AS total_cost
+    FROM markets m
+    CROSS JOIN items i
+    LEFT JOIN item_prices p ON p.item_id = i.id AND p.market_id = m.id
     GROUP BY m.name
     ORDER BY total_cost ASC
   ''');

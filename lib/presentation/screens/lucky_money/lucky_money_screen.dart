@@ -8,6 +8,8 @@ import '../../providers/lucky_money_provider.dart';
 import 'widgets/lucky_draw_dialog.dart';
 import 'widgets/denomination_calculator_dialog.dart';
 import '../../widgets/confetti_overlay.dart';
+import 'package:flutter/services.dart';
+import '../../../core/utils/currency_utils.dart';
 
 class LuckyMoneyScreen extends StatefulWidget {
   const LuckyMoneyScreen({super.key});
@@ -369,7 +371,9 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
   void _showLuckyMoneyDialog(BuildContext context, {LuckyMoney? item}) {
     final isEdit = item != null;
     final nameController = TextEditingController(text: item?.recipient);
-    final amountController = TextEditingController(text: item?.amount.toInt().toString());
+    final amountController = TextEditingController(
+      text: item != null ? CurrencyUtils.formatNumber(item.amount.toInt()) : '',
+    );
     String selectedGroup = item?.group ?? 'Gia đình';
 
     showDialog(
@@ -391,6 +395,10 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  CurrencyTextInputFormatter(),
+                ],
                 decoration: const InputDecoration(
                   labelText: "Số tiền (đ)",
                   prefixIcon: Icon(Icons.monetization_on),
@@ -417,7 +425,8 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () {
               if (nameController.text.isNotEmpty && amountController.text.isNotEmpty) {
-                final amount = double.tryParse(amountController.text) ?? 0;
+                final digitsOnly = amountController.text.replaceAll(RegExp(r'[^\d]'), '');
+                final amount = double.tryParse(digitsOnly) ?? 0;
                 final provider = context.read<LuckyMoneyProvider>();
                 
                 if (isEdit) {

@@ -289,6 +289,15 @@ class DatabaseHelper {
   Future<void> seedPricesForItem(
       int itemId, double estimatedPrice) async {
     final db = await database;
+    
+    // ⭐ Đảm bảo không tạo trùng duplicate prices
+    final existed = await db.query(
+      'item_prices',
+      where: 'item_id = ?',
+      whereArgs: [itemId],
+    );
+    if (existed.isNotEmpty) return;
+
     final markets = await db.query('markets');
     final random = Random();
 
