@@ -129,6 +129,7 @@ class ShoppingRepositoryImpl
       quantity: model.quantity,
       estimatedPrice: model.estimatedPrice,
       isBought: model.isBought,
+      imageUrl: model.imageUrl,
     );
   }
 
@@ -140,6 +141,7 @@ class ShoppingRepositoryImpl
       quantity: entity.quantity,
       estimatedPrice: entity.estimatedPrice,
       isBought: entity.isBought,
+      imageUrl: entity.imageUrl,
     );
   }
 

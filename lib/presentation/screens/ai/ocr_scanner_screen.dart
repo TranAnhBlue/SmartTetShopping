@@ -71,6 +71,15 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
       final Uint8List bytes = directBytes ?? await file!.readAsBytes();
       final items = await AIService().analyzeReceipt(bytes);
       
+      // Assign the captured photo's path as the image URL for all items found
+      if (file != null) {
+        for (var item in items) {
+          if (item['image_url'] == null || item['image_url'].toString().isEmpty) {
+            item['image_url'] = file.path;
+          }
+        }
+      }
+      
       setState(() {
         _extractedItems = items;
         _isAnalyzing = false;
@@ -159,6 +168,7 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
         estimatedPrice: price,
         quantity: quantity,
         categoryId: provider.getCategoryIdByName(categoryStr),
+        imageUrl: item['image_url'],
       );
     }).toList();
 
@@ -290,7 +300,16 @@ class _OCRScannerScreenState extends State<OCRScannerScreen> {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: CircleAvatar(child: Text('${item['quantity'] ?? 1}')),
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    item['image_url'] ?? 'https://loremflickr.com/100/100/grocery',
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.shopping_basket),
+                  ),
+                ),
                 title: Text(item['name'] ?? 'Không rõ'),
                 subtitle: Text('${CurrencyUtils.format(item['estimated_price'] ?? 0)} - ${item['category'] ?? 'Thực phẩm'}'),
                 trailing: IconButton(

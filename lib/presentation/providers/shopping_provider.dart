@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/utils/currency_utils.dart';
+import '../../data/local_db/database_helper.dart';
 import '../../domain/entities/shopping_item.dart';
 import '../../domain/entities/category.dart';
 
@@ -117,9 +118,14 @@ class ShoppingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Ensure all items have images first
+      await DatabaseHelper.instance.ensureAllItemsHaveImages();
+      
+      // Refresh items from DB
       items = await getItemsUsecase();
+      
       await _loadCheapestMarkets();
-      updateAISuggestion(); // Trigger AI suggestion
+      updateAISuggestion();
     } catch (e) {
       debugPrint("Load Items Error: $e");
     } finally {
@@ -303,6 +309,7 @@ class ShoppingProvider extends ChangeNotifier {
         quantity: item.quantity,
         estimatedPrice: item.estimatedPrice,
         isBought: !item.isBought,
+        imageUrl: item.imageUrl,
       );
     }
     notifyListeners();

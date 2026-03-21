@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../core/utils/currency_utils.dart';
 import '../../domain/entities/shopping_item.dart';
@@ -72,6 +73,41 @@ class ItemCard extends StatelessWidget {
                         : null,
                   ),
                 ),
+
+                const SizedBox(width: 12),
+
+                /// ✅ Product Image
+                if (item.imageUrl != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: item.imageUrl!.startsWith('http')
+                        ? Image.network(
+                            item.imageUrl!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.shopping_basket, size: 30),
+                          )
+                        : Image.file(
+                            File(item.imageUrl!),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.shopping_basket, size: 30),
+                          ),
+                  )
+                else
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.shopping_basket, color: Colors.grey.shade400),
+                  ),
 
                 const SizedBox(width: 12),
 

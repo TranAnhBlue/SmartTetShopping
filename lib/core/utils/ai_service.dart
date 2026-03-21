@@ -70,6 +70,7 @@ class AIService {
       - "estimated_price": đơn giá hoặc tổng giá ước tính của món đó (VND, số nguyên). Nếu là ảnh chụp đồ thực tế, hãy ước lượng giá theo thị trường Tết.
       - "quantity": số lượng (số nguyên)
       - "category": tên nhóm (Thực phẩm, Đồ uống, Bánh kẹo, v.v.)
+      - "image_url": URL ảnh minh họa (Hãy tạo URL dạng: https://loremflickr.com/400/400/[english_keyword])
 
       Chỉ trả về chuỗi JSON ròng, không kèm markdown hay giải thích. Nếu không nhận diện được gì, trả về [].
       ''';

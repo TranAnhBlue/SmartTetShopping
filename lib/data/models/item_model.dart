@@ -5,6 +5,7 @@ class ItemModel {
   final int quantity;
   final double estimatedPrice;
   final bool isBought;
+  final String? imageUrl;
 
   ItemModel({
     this.id,
@@ -13,6 +14,7 @@ class ItemModel {
     required this.quantity,
     required this.estimatedPrice,
     this.isBought = false,
+    this.imageUrl,
   });
 
   factory ItemModel.fromMap(Map<String, dynamic> map) {
@@ -24,6 +26,7 @@ class ItemModel {
       estimatedPrice:
       (map['estimated_price'] as num?)?.toDouble() ?? 0,
       isBought: (map['is_bought'] ?? 0) == 1,
+      imageUrl: map['image_url'] as String?,
     );
   }
 
@@ -36,6 +39,7 @@ class ItemModel {
       'quantity': quantity,
       'estimated_price': estimatedPrice,
       'is_bought': isBought ? 1 : 0,
+      'image_url': imageUrl,
     };
   }
 }

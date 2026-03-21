@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -25,7 +26,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -37,6 +38,9 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await _createLuckyMoneyTable(db);
+    }
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE items ADD COLUMN image_url TEXT');
     }
   }
 
@@ -77,6 +81,7 @@ class DatabaseHelper {
         quantity INTEGER NOT NULL,
         estimated_price REAL NOT NULL,
         is_bought INTEGER NOT NULL DEFAULT 0,
+        image_url TEXT,
         FOREIGN KEY(category_id)
           REFERENCES categories(id)
           ON DELETE CASCADE
@@ -161,21 +166,21 @@ class DatabaseHelper {
 
     final items = [
       // ===== THỰC PHẨM
-      ['Thịt heo', 1, 120000],
-      ['Thịt bò', 1, 220000],
-      ['Gà ta', 1, 180000],
-      ['Chả lụa', 1, 150000],
-      ['Trứng gà', 1, 35000],
-      ['Rau cải', 1, 20000],
-      ['Cà rốt', 1, 15000],
-      ['Hành lá', 1, 10000],
+      ['Thịt heo', 1, 120000, 'https://loremflickr.com/400/400/pork'],
+      ['Thịt bò', 1, 220000, 'https://loremflickr.com/400/400/beef'],
+      ['Gà ta', 1, 180000, 'https://loremflickr.com/400/400/chicken'],
+      ['Chả lụa', 1, 150000, 'https://loremflickr.com/400/400/vietnamese-sausage'],
+      ['Trứng gà', 1, 35000, 'https://loremflickr.com/400/400/eggs'],
+      ['Rau cải', 1, 20000, 'https://loremflickr.com/400/400/vegetables'],
+      ['Cà rốt', 1, 15000, 'https://loremflickr.com/400/400/carrot'],
+      ['Hành lá', 1, 10000, 'https://loremflickr.com/400/400/scallion'],
 
       // ===== ĐỒ CÚNG
-      ['Bánh chưng', 2, 70000],
-      ['Hoa cúc', 2, 50000],
-      ['Nhang', 2, 30000],
-      ['Đèn cầy', 2, 25000],
-      ['Mâm ngũ quả', 2, 200000],
+      ['Bánh chưng', 2, 70000, 'https://loremflickr.com/400/400/sticky-rice-cake'],
+      ['Hoa cúc', 2, 50000, 'https://loremflickr.com/400/400/chrysanthemum'],
+      ['Nhang', 2, 30000, 'https://loremflickr.com/400/400/incense'],
+      ['Đèn cầy', 2, 25000, 'https://loremflickr.com/400/400/candle'],
+      ['Mâm ngũ quả', 2, 200000, 'https://loremflickr.com/400/400/fruits'],
 
       // ===== TRANG TRÍ
       ['Bao lì xì', 3, 20000],
@@ -202,11 +207,12 @@ class DatabaseHelper {
 
     for (var item in items) {
       final itemId = await db.insert('items', {
-        'name': item[0],
-        'category_id': item[1],
+        'name': item[0] as String,
+        'category_id': item[1] as int,
         'quantity': 1,
-        'estimated_price': item[2],
+        'estimated_price': item[2] as num,
         'is_bought': 0,
+        'image_url': item[3] as String,
       });
 
       /// auto generate prices
@@ -263,6 +269,7 @@ class DatabaseHelper {
     required int categoryId,
     required int quantity,
     required double estimatedPrice,
+    String? imageUrl,
   }) async {
     final db = await database;
 
@@ -272,6 +279,7 @@ class DatabaseHelper {
       'quantity': quantity,
       'estimated_price': estimatedPrice,
       'is_bought': 0,
+      'image_url': imageUrl,
     });
 
     await seedPricesForItem(itemId, estimatedPrice);
@@ -326,6 +334,62 @@ class DatabaseHelper {
   Future<int> deleteItem(int id) async {
     final db = await database;
     return db.delete('items', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> ensureAllItemsHaveImages() async {
+    final db = await database;
+    final items = await db.query('items', where: 'image_url IS NULL OR image_url = ""');
+    
+    debugPrint('Đang kiểm tra ảnh cho ${items.length} món đồ...');
+    
+    final Map<String, String> translationMap = {
+      'thịt bò': 'beef',
+      'thịt heo': 'pork',
+      'thịt gà': 'chicken',
+      'gà ta': 'chicken',
+      'bánh chưng': 'sticky-rice-cake',
+      'giò lụa': 'vietnamese-sausage',
+      'chả lụa': 'vietnamese-sausage',
+      'bia': 'beer',
+      'nước ngọt': 'soft-drink',
+      'coca': 'coca-cola',
+      'bánh kẹo': 'candy',
+      'mứt': 'candied-fruit',
+      'hoa cúc': 'chrysanthemum',
+      'bao lì xì': 'red-envelope',
+      'trái cây': 'fruits',
+      'rau': 'vegetables',
+    };
+
+    for (var item in items) {
+      final id = item['id'] as int;
+      final name = item['name'] as String;
+      
+      String keyword = name.toLowerCase();
+      // Try to find a match in the translation map
+      String englishKeyword = 'grocery';
+      for (var entry in translationMap.entries) {
+        if (keyword.contains(entry.key)) {
+          englishKeyword = entry.value;
+          break;
+        }
+      }
+      
+      if (englishKeyword == 'grocery' && name.isNotEmpty) {
+        englishKeyword = name.split(' ').first;
+      }
+
+      final imageUrl = 'https://loremflickr.com/400/400/$englishKeyword,food';
+      
+      debugPrint('Cập nhật ảnh cho $name (id: $id) -> keyword: $englishKeyword');
+      
+      await db.update(
+        'items',
+        {'image_url': imageUrl},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
   }
 
   Future<void> debugDatabase() async {

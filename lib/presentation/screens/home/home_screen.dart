@@ -222,103 +222,107 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             animation: _petalController,
             petalPositions: _petalPositions,
           ),
-          CustomScrollView(
-            slivers: [
-              if (provider.isLoading && provider.items.isEmpty)
-                const SliverToBoxAdapter(child: LinearProgressIndicator(color: Colors.red)),
-              
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const TetBanner(),
-                    const AISmartReminder(),
-                    const TetCountdown(),
-                    const SpendingDashboard(),
-                    const SizedBox(height: 12),
-                    QuickActions(
-                      onLuckyMoney: () => Navigator.pushNamed(context, '/lucky-money'),
-                      onGreetings: () => Navigator.pushNamed(context, '/greetings'),
-                      onScanner: () => Navigator.pushNamed(context, '/ocr-scanner'),
-                      onRitual: () => Navigator.pushNamed(context, '/ritual'),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
+          RefreshIndicator(
+            onRefresh: () => provider.loadItems(),
+            color: Colors.red,
+            child: CustomScrollView(
+              slivers: [
+                if (provider.isLoading && provider.items.isEmpty)
+                  const SliverToBoxAdapter(child: LinearProgressIndicator(color: Colors.red)),
+                
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      const TetBanner(),
+                      const AISmartReminder(),
+                      const TetCountdown(),
+                      const SpendingDashboard(),
+                      const SizedBox(height: 12),
+                      QuickActions(
+                        onLuckyMoney: () => Navigator.pushNamed(context, '/lucky-money'),
+                        onGreetings: () => Navigator.pushNamed(context, '/greetings'),
+                        onScanner: () => Navigator.pushNamed(context, '/ocr-scanner'),
+                        onRitual: () => Navigator.pushNamed(context, '/ritual'),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
-              ),
-
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _CategoryFilterDelegate(
-                  child: Container(
-                    color: Colors.transparent, // Background will show through
-                    child: CategoryFilterBar(
-                      provider: provider,
-                      onCategorySelected: (id) {
-                        provider.setCategoryFilter(id);
-                        setState(() => _currentPage = 1);
-                      },
+  
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _CategoryFilterDelegate(
+                    child: Container(
+                      color: Colors.transparent, // Background will show through
+                      child: CategoryFilterBar(
+                        provider: provider,
+                        onCategorySelected: (id) {
+                          provider.setCategoryFilter(id);
+                          setState(() => _currentPage = 1);
+                        },
+                      ),
                     ),
                   ),
                 ),
-              ),
-
-              if (provider.items.isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      "🛒 Danh sách đang trống!\nBấm + hoặc Quét đơn để bắt đầu nhé.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70, fontSize: 16),
+  
+                if (provider.items.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        "🛒 Danh sách đang trống!\nBấm + hoặc Quét đơn để bắt đầu nhé.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, i) {
+                          final item = pagedItems[i];
+                          return ItemCard(
+                            item: item,
+                            categoryName: provider.getCategoryName(item.categoryId),
+                            cheapestMarket: item.id == null ? null : provider.cheapestMarkets[item.id!],
+                            onTap: () async {
+                              showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                              try {
+                                await provider.openItemPrice(item);
+                              } catch (e) {
+                                debugPrint("Compare price error: $e");
+                              }
+                              if (!context.mounted) return;
+                              Navigator.pop(context);
+                              Navigator.pushNamed(context, '/item-price', arguments: ItemPriceArgs(itemId: item.id!, itemName: item.name));
+                            },
+                            onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
+                            onDelete: () => provider.deleteItem(item.id!),
+                            onToggleBought: () {
+                              provider.toggleBought(item);
+                              if (!item.isBought) {
+                                ConfettiOverlay.of(context)?.play();
+                              }
+                            },
+                          );
+                        },
+                        childCount: pagedItems.length,
+                      ),
                     ),
                   ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        final item = pagedItems[i];
-                        return ItemCard(
-                          item: item,
-                          categoryName: provider.getCategoryName(item.categoryId),
-                          cheapestMarket: item.id == null ? null : provider.cheapestMarkets[item.id!],
-                          onTap: () async {
-                            showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
-                            try {
-                              await provider.openItemPrice(item);
-                            } catch (e) {
-                              debugPrint("Compare price error: $e");
-                            }
-                            if (!context.mounted) return;
-                            Navigator.pop(context);
-                            Navigator.pushNamed(context, '/item-price', arguments: ItemPriceArgs(itemId: item.id!, itemName: item.name));
-                          },
-                          onEdit: () => Navigator.pushNamed(context, '/edit-item', arguments: item),
-                          onDelete: () => provider.deleteItem(item.id!),
-                          onToggleBought: () {
-                            provider.toggleBought(item);
-                            if (!item.isBought) {
-                              ConfettiOverlay.of(context)?.play();
-                            }
-                          },
-                        );
-                      },
-                      childCount: pagedItems.length,
-                    ),
+  
+                SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      _buildPagination(provider.filteredItems.length),
+                      const SizedBox(height: 80), // Padding for FAB
+                    ],
                   ),
                 ),
-
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    _buildPagination(provider.filteredItems.length),
-                    const SizedBox(height: 80), // Padding for FAB
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
