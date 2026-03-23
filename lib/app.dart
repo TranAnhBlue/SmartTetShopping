@@ -305,6 +305,11 @@ class _ZingMiniPlayerState extends State<_ZingMiniPlayer> with SingleTickerProvi
               // ⏯️ Điều khiển
               IconButton(
                 visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.skip_previous, color: Colors.white, size: 24),
+                onPressed: () => widget.music.previous(),
+              ),
+              IconButton(
+                visualDensity: VisualDensity.compact,
                 icon: Icon(widget.music.isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled, color: const Color(0xFFFFD700), size: 36),
                 onPressed: () => widget.music.toggleMute(),
               ),
