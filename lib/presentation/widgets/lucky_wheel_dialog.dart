@@ -26,7 +26,38 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
   ];
   final GlobalKey<LuckyWheelState> _wheelKey = GlobalKey<LuckyWheelState>();
   String _result = "";
+  String _spicyMessage = "";
+  String _closeButtonLabel = "ĐÓNG";
   bool _isSpinning = false;
+
+  final Map<String, List<String>> _spicyMessages = {
+    "fail": [
+      "Nhân phẩm hôm nay hơi... lag! Đi rửa tay rồi quay lại sau nhé.",
+      "Ông Trời thử thách lòng kiên nhẫn thôi mà. Quay lại lần nữa xem ai sợ ai!",
+      "Hụt rồi! Nhưng đừng buồn, ít nhất vòng quay cũng vừa trơn tru hơn.",
+      "Gần trúng rồi! Chỉ thiếu đúng... một chút may mắn nữa thôi.",
+    ],
+    "small": [
+      "Có còn hơn không! Đủ ly cà phê sáng nay rồi, chúc mừng bạn nhé!",
+      "Lộc lá đã về! Tích tiểu thành đại, biết đâu phát sau lại trúng 500k?",
+      "Vận may đang khởi động thôi. Chúc mừng bạn mở bát thành công!",
+      "Ting ting! Lì xì đã hạ cánh an toàn vào túi bạn.",
+    ],
+    "medium": [
+      "Quá đã! Một món hời không hề nhỏ, chúc mừng bạn nhé!",
+      "Lộc lá xum xuê! 100k-200k là đủ một bữa tiệc trà bánh linh đình rồi.",
+      "Vận may đang lên hương! Chỉ cách Jackpot đúng một bước chân thôi.",
+      "Tay thơm quá! Giữ vững phong độ này để 'hốt' nốt 500k nhé.",
+    ],
+    "jackpot": [
+      "Hào quang rực rỡ! Bạn chính là 'con cưng' của Thần Tài hôm nay rồiii!",
+      "U là trời! 500k đã thuộc về chủ nhân xứng đáng. Bạn có bí kíp gì không?",
+      "Nổ hũ! Đề nghị bạn đi khao ngay vì vận may này không phải dạng vừa đâu!",
+      "Đỉnh của chóp! Vòng quay hôm nay chính thức 'gục ngã' trước bạn.",
+    ]
+  };
+
+  final List<String> _closeLabels = ["Thử lại vận may", "Nhận lộc thôi!", "Chơi tiếp cho cháy", "Thoát (trong nuối tiếc)"];
 
   @override
   void initState() {
@@ -122,9 +153,27 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
                     });
                   },
                   onResult: (index) {
+                    final item = _items[index];
+                    String category = "small";
+                    if (item.contains("Hẹn May") || item.contains("Chúc Tết")) {
+                      category = "fail";
+                      SoundService().playFail();
+                    } else if (item.contains("500k") || item.contains("Phát Tài")) {
+                      category = "jackpot";
+                      SoundService().playJackpot();
+                    } else if (item.contains("100k") || item.contains("200k")) {
+                      category = "medium";
+                      SoundService().playWin(); // Vẫn dùng Win nhưng có thể tùy chỉnh thêm
+                    } else {
+                      category = "small";
+                      SoundService().playWin();
+                    }
+
                     setState(() {
                       _isSpinning = false;
-                      _result = _items[index];
+                      _result = item;
+                      _spicyMessage = _spicyMessages[category]![Random().nextInt(_spicyMessages[category]!.length)];
+                      _closeButtonLabel = _closeLabels[Random().nextInt(_closeLabels.length)];
                     });
                     _confettiController.play();
                   },
@@ -173,6 +222,20 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                child: Text(
+                                  _spicyMessage,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.red.shade900,
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -199,9 +262,9 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: _isSpinning ? null : () => Navigator.pop(context),
-              child: const Text(
-                "ĐÓNG",
-                style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
+              child: Text(
+                _result.isNotEmpty ? _closeButtonLabel : "ĐÓNG",
+                style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold),
               ),
             ),
           ],

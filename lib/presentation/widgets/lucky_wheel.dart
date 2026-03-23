@@ -46,7 +46,6 @@ class LuckyWheelState extends State<LuckyWheel> with TickerProviderStateMixin {
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        SoundService().playWin(); // Âm thanh chiến thắng
         setState(() {
           _isSpinning = false;
           _showFlash = true;
