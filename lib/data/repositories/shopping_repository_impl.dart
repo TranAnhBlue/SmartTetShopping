@@ -45,6 +45,18 @@ class ShoppingRepositoryImpl
 
   @override
   Future<void> updateItem(ShoppingItem item) async {
+    if (item.id != null) {
+      final db = await DatabaseHelper.instance.database;
+      final oldData = await db.query('items', where: 'id = ?', whereArgs: [item.id]);
+      if (oldData.isNotEmpty) {
+        final oldPrice = (oldData.first['estimated_price'] as num).toDouble();
+        if (oldPrice != item.estimatedPrice) {
+          // If estimated price changed, we must regenerate the market prices
+          await db.delete('item_prices', where: 'item_id = ?', whereArgs: [item.id]);
+          await DatabaseHelper.instance.seedPricesForItem(item.id!, item.estimatedPrice);
+        }
+      }
+    }
     await itemDao.update(_toModel(item));
   }
 

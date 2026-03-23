@@ -145,8 +145,8 @@ class ItemCard extends StatelessWidget {
 
                       /// giá + số lượng
                       Text(
-                        "Giá: ${CurrencyUtils.format(price)}\n"
-                            "Số lượng: ${item.quantity}",
+                        "Dự kiến: ${CurrencyUtils.format(item.estimatedPrice)}\n"
+                        "Số lượng: ${item.quantity}",
                         style: TextStyle(
                           decoration: bought ? TextDecoration.lineThrough : null,
                           color: bought ? Colors.grey : null,
@@ -157,7 +157,7 @@ class ItemCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            "💡 Rẻ nhất: $cheapestMarketName",
+                            "💡 Rẻ nhất: ${CurrencyUtils.format(price)} ($cheapestMarketName)",
                             style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.w600,
@@ -217,4 +217,4 @@ class ItemCard extends StatelessWidget {
       ),
     );
   }
-}
+}

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../providers/shopping_provider.dart';
 import '../../../domain/entities/shopping_item.dart';
+import 'package:flutter/services.dart';
+import '../../../core/utils/currency_utils.dart';
 
 class EditItemScreen extends StatefulWidget {
 
@@ -30,7 +32,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _quantityCtrl =
         TextEditingController(text: widget.item.quantity.toString());
     _priceCtrl =
-        TextEditingController(text: widget.item.estimatedPrice.toString());
+        TextEditingController(text: CurrencyUtils.formatNumber(widget.item.estimatedPrice));
   }
 
   @override
@@ -47,18 +49,30 @@ class _EditItemScreenState extends State<EditItemScreen> {
 
     final provider = context.read<ShoppingProvider>();
 
+    final priceDigits = _priceCtrl.text.replaceAll(RegExp(r'[^\d]'), '');
     final updatedItem = ShoppingItem(
       id: widget.item.id,
       name: _nameCtrl.text.trim(),
       categoryId: widget.item.categoryId,
       quantity: int.parse(_quantityCtrl.text),
-      estimatedPrice: double.parse(_priceCtrl.text),
+      estimatedPrice: double.parse(priceDigits),
       isBought: widget.item.isBought,
+      imageUrl: widget.item.imageUrl,
     );
 
-    await provider.updateItem(updatedItem);
-
-    if (mounted) Navigator.pop(context);
+    try {
+      await provider.updateItem(updatedItem);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error updating item: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -102,11 +116,13 @@ class _EditItemScreenState extends State<EditItemScreen> {
               TextFormField(
                 controller: _priceCtrl,
                 keyboardType: TextInputType.number,
-                decoration:
-                const InputDecoration(labelText: "Estimated price"),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  CurrencyTextInputFormatter(),
+                ],
+                decoration: const InputDecoration(labelText: "Estimated price (₫)"),
                 validator: (value) {
                   if (value == null || value.isEmpty) return "Required";
-                  if (double.tryParse(value) == null) return "Invalid number";
                   return null;
                 },
               ),

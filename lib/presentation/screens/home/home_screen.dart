@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final pagedItems = getPagedItems(provider.filteredItems);
     return Scaffold(
       appBar: AppBar(
-        title: const Text("🎆 Smart Tết Shopping"),
+        title: const Text("🎆 Smart Tet Shopping"),
         actions: [
           IconButton(
             icon: const Icon(Icons.cloud_sync),

@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("🧧", style: TextStyle(fontSize: 80)),
                     const SizedBox(height: 16),
                     const Text(
-                      "Smart Tết Shopping",
+                      "Smart Tet Shopping",
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
