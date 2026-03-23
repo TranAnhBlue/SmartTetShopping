@@ -8,6 +8,7 @@ import '../../providers/lucky_money_provider.dart';
 import 'widgets/lucky_draw_dialog.dart';
 import 'widgets/denomination_calculator_dialog.dart';
 import '../../widgets/confetti_overlay.dart';
+import '../../widgets/lucky_wheel_dialog.dart'; // Thêm import
 import 'package:flutter/services.dart';
 import '../../../core/utils/currency_utils.dart';
 
@@ -89,6 +90,16 @@ class _LuckyMoneyScreenState extends State<LuckyMoneyScreen> {
             backgroundColor: Colors.orange,
             heroTag: "luckydraw",
             child: const Icon(Icons.casino, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.small(
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => const LuckyWheelDialog(),
+            ),
+            backgroundColor: const Color(0xFFFFD700),
+            heroTag: "luckywheel",
+            child: const Icon(Icons.auto_mode, color: Colors.red), // Icon vòng tròn xoay cho cảm giác vòng quay
           ),
           const SizedBox(height: 12),
           FloatingActionButton(

@@ -65,11 +65,38 @@ class MyApp extends StatelessWidget {
               
               /// 🎵 Zing MP3 Style Draggable Mini Player
               Consumer<MusicProvider>(
-                builder: (context, music, _) => _DraggableMusicOverlay(
-                  music: music,
-                  initialBottom: 130,
-                  onPlaylistTap: () => _showPlaylist(context, music),
-                ),
+                builder: (context, music, _) {
+                  if (!music.isVisible) {
+                    // Nút nhỏ nép vào mép phải để hiện lại
+                    return Positioned(
+                      top: 100,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () => music.toggleVisibility(),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.7),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              bottomLeft: Radius.circular(20),
+                            ),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4)
+                            ],
+                          ),
+                          child: const Icon(Icons.music_note, color: Color(0xFFFFD700), size: 18),
+                        ),
+                      ),
+                    );
+                  }
+                  return _DraggableMusicOverlay(
+                    music: music,
+                    initialBottom: 130,
+                    onPlaylistTap: () => _showPlaylist(context, music),
+                  );
+                },
               ),
             ],
           ),
@@ -317,6 +344,12 @@ class _ZingMiniPlayerState extends State<_ZingMiniPlayer> with SingleTickerProvi
                 visualDensity: VisualDensity.compact,
                 icon: const Icon(Icons.skip_next, color: Colors.white, size: 28),
                 onPressed: () => widget.music.next(),
+              ),
+              const VerticalDivider(color: Colors.white24, width: 1, indent: 15, endIndent: 15),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close, color: Colors.white54, size: 18),
+                onPressed: () => widget.music.toggleVisibility(),
               ),
             ],
           ),

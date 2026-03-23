@@ -13,6 +13,7 @@ class MusicProvider with ChangeNotifier {
   bool _isMuted = false;
   bool _isPlaying = false;
   int _currentIndex = 0;
+  bool _isVisible = true; // Thêm trạng thái hiển thị
 
   final List<_Song> _playlist = [
     _Song(title: 'Một Năm Mới Bình An', artist: 'Sơn Tùng M-TP', source: AssetSource('audio/Một Năm Mới Bình An.mp3')),
@@ -29,6 +30,7 @@ class MusicProvider with ChangeNotifier {
   String get currentTitle => _playlist[_currentIndex].title;
   String get currentArtist => _playlist[_currentIndex].artist;
   List<String> get songTitles => _playlist.map((s) => s.title).toList();
+  bool get isVisible => _isVisible;
 
   int _retryCount = 0;
 
@@ -111,6 +113,11 @@ class MusicProvider with ChangeNotifier {
 
   // Giữ lại tên hàm cũ để app.dart không lỗi, nhưng đổi logic sang Play/Pause
   Future<void> toggleMute() => togglePlayPause();
+
+  void toggleVisibility() {
+    _isVisible = !_isVisible;
+    notifyListeners();
+  }
 
   @override
   void dispose() {
