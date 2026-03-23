@@ -15,7 +15,8 @@ import '../../widgets/quick_actions.dart';
 import '../../widgets/tet_banner.dart';
 import '../../widgets/category_filter_bar.dart';
 import '../../widgets/ai_smart_reminder.dart';
-import '../../widgets/weather_card.dart'; // Thêm import
+import '../../widgets/weather_card.dart';
+import '../../widgets/shimmer_text.dart';
 import '../../../core/utils/location_service.dart';
 import '../../../core/utils/auth_service.dart';
 import '../../../core/utils/notification_service.dart';
@@ -235,6 +236,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: Column(
                     children: [
                       const TetBanner(),
+                      const SizedBox(height: 12),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: WeatherCard(),

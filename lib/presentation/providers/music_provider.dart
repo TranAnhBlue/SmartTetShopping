@@ -41,7 +41,7 @@ class MusicProvider with ChangeNotifier {
   Future<void> _init() async {
     try {
       await _player.setReleaseMode(ReleaseMode.stop);
-      await _player.setVolume(1.0);
+      await _player.setVolume(0.5);
       
       _player.onPlayerStateChanged.listen((state) {
         _isPlaying = state == PlayerState.playing;

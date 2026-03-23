@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../core/utils/sound_service.dart';
 
 class LuckyWheel extends StatefulWidget {
   final List<String> items;
@@ -45,9 +46,10 @@ class LuckyWheelState extends State<LuckyWheel> with TickerProviderStateMixin {
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
+        SoundService().playWin(); // Âm thanh chiến thắng
         setState(() {
           _isSpinning = false;
-          _showFlash = true; // Kích hoạt chớp sáng
+          _showFlash = true;
         });
         
         // Tắt chớp sáng sau 100ms
@@ -72,11 +74,11 @@ class LuckyWheelState extends State<LuckyWheel> with TickerProviderStateMixin {
   void spin() {
     if (_isSpinning) return;
 
+    SoundService().playSpin(); // Phát tiếng xoay
     widget.onStart();
     setState(() => _isSpinning = true);
 
     final random = Random();
-    // Spin 5-10 times plus random offset
     final double extraRotation = random.nextDouble() * 2 * pi;
     final double totalRotation = 10 * pi + extraRotation;
 

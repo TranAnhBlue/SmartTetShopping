@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'lucky_wheel.dart';
 import 'shimmer_text.dart';
+import '../../core/utils/sound_service.dart';
 import 'dart:math';
 
 class LuckyWheelDialog extends StatefulWidget {
@@ -60,14 +61,41 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              "🏮 VÒNG QUAY LÌ XÌ 🏮",
-              style: TextStyle(
-                color: Color(0xFFFFD700),
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                const Center(
+                  child: Text(
+                    "🏮 VÒNG QUAY LÌ XÌ 🏮",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  child: StatefulBuilder(
+                    builder: (context, setDialogState) {
+                      final sound = SoundService();
+                      return IconButton(
+                        icon: Icon(
+                          sound.soundEnabled ? Icons.volume_up : Icons.volume_off,
+                          color: const Color(0xFFFFD700),
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          sound.toggleSound();
+                          setDialogState(() {});
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             const Text(
