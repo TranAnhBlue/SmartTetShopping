@@ -6,6 +6,7 @@ import '../../core/utils/currency_utils.dart';
 import '../providers/shopping_provider.dart';
 import '../providers/weather_provider.dart';
 import 'weather_card.dart';
+import 'shimmer_text.dart';
 
 class SpendingDashboard extends StatelessWidget {
   const SpendingDashboard({super.key});
@@ -71,30 +72,54 @@ class SpendingDashboard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            CurrencyUtils.format(provider.tetBudget),
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+          if (provider.tetBudget > 0)
+            ShimmerText(
+              text: CurrencyUtils.format(provider.tetBudget),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFFFD700),
+              ),
+            )
+          else
+            Text(
+              CurrencyUtils.format(provider.tetBudget),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
-          ),
+          
           if (provider.tetBudget > 0 && globalTotal > provider.tetBudget)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.yellowAccent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text(
-                "⚠️ VƯỢT NGÂN SÁCH",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.5, end: 1.0),
+              duration: const Duration(seconds: 1),
+              curve: Curves.easeInOut,
+              builder: (context, opacity, child) {
+                return Opacity(
+                  opacity: opacity,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.yellowAccent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(color: Colors.yellowAccent.withOpacity(0.5 * opacity), blurRadius: 8)
+                      ],
+                    ),
+                    child: const Text(
+                      "⚠️ VƯỢT NGÂN SÁCH",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           const SizedBox(height: 12),
           // Progress Bar

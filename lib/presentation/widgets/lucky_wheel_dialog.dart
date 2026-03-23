@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'lucky_wheel.dart';
+import 'shimmer_text.dart';
 import 'dart:math';
 
 class LuckyWheelDialog extends StatefulWidget {
@@ -79,8 +80,8 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
               children: [
                 ConfettiWidget(
                   confettiController: _confettiController,
-                  blastDirection: -pi / 2,
-                  colors: const [Colors.red, Colors.yellow, Colors.orange],
+                  blastDirectionality: BlastDirectionality.explosive, // Bắn tung tóe hơn
+                  colors: const [Colors.red, Colors.yellow, Colors.orange, Colors.white],
                   shouldLoop: false,
                 ),
                 LuckyWheel(
@@ -118,14 +119,23 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
                             color: const Color(0xFFFFD700),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10)
+                              BoxShadow(
+                                color: _result.contains("500k") 
+                                  ? Colors.white.withOpacity(0.8) 
+                                  : Colors.black.withOpacity(0.3), 
+                                blurRadius: 20,
+                                spreadRadius: _result.contains("500k") ? 5 : 0,
+                              )
                             ],
+                            border: _result.contains("500k") 
+                              ? Border.all(color: Colors.white, width: 2) 
+                              : null,
                           ),
                           child: Column(
                             children: [
-                              const Text(
-                                "CHÚC MỪNG!",
-                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
+                              ShimmerText(
+                                text: "CHÚC MỪNG!",
+                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                               Text(
                                 _result,

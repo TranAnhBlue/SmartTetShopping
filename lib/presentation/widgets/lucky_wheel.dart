@@ -17,11 +17,13 @@ class LuckyWheel extends StatefulWidget {
   State<LuckyWheel> createState() => LuckyWheelState();
 }
 
-class LuckyWheelState extends State<LuckyWheel> with SingleTickerProviderStateMixin {
+class LuckyWheelState extends State<LuckyWheel> with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  late AnimationController _pulseController;
   double _currentRotation = 0;
   bool _isSpinning = false;
+  bool _showFlash = false; // Trạng thái hiệu ứng chớp sáng
 
   @override
   void initState() {
@@ -36,10 +38,24 @@ class LuckyWheelState extends State<LuckyWheel> with SingleTickerProviderStateMi
       curve: Curves.easeOutQuart,
     );
 
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        setState(() => _isSpinning = false);
-        _currentRotation = _animation.value; // Cập nhật lại vòng xoay hiện tại
+        setState(() {
+          _isSpinning = false;
+          _showFlash = true; // Kích hoạt chớp sáng
+        });
+        
+        // Tắt chớp sáng sau 100ms
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) setState(() => _showFlash = false);
+        });
+
+        _currentRotation = _animation.value;
         
         final double normalizedRotation = _currentRotation % (2 * pi);
         final double sectionAngle = (2 * pi) / widget.items.length;
@@ -84,6 +100,7 @@ class LuckyWheelState extends State<LuckyWheel> with SingleTickerProviderStateMi
   @override
   void dispose() {
     _controller.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -97,20 +114,25 @@ class LuckyWheelState extends State<LuckyWheel> with SingleTickerProviderStateMi
           return Stack(
             alignment: Alignment.center,
             children: [
-              // Outer Glow
-              Container(
-                width: 290,
-                height: 290,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.yellow.withOpacity(0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    )
-                  ],
-                ),
+              // Outer Pulsing Glow
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Container(
+                    width: 290 + (10 * _pulseController.value),
+                    height: 290 + (10 * _pulseController.value),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD700).withOpacity(0.3 + (0.4 * _pulseController.value)),
+                          blurRadius: 15 + (15 * _pulseController.value),
+                          spreadRadius: 2 + (8 * _pulseController.value),
+                        )
+                      ],
+                    ),
+                  );
+                },
               ),
               // The Wheel
               Transform.rotate(
@@ -120,6 +142,16 @@ class LuckyWheelState extends State<LuckyWheel> with SingleTickerProviderStateMi
                   painter: _WheelPainter(items: widget.items),
                 ),
               ),
+              // Lighting Flash Overlay
+              if (_showFlash)
+                Container(
+                  width: 280,
+                  height: 280,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               // Center Cap
               Container(
                 width: 40,

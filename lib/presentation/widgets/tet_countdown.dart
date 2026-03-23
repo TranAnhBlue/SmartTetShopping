@@ -9,8 +9,9 @@ class TetCountdown extends StatefulWidget {
   State<TetCountdown> createState() => _TetCountdownState();
 }
 
-class _TetCountdownState extends State<TetCountdown> {
+class _TetCountdownState extends State<TetCountdown> with SingleTickerProviderStateMixin {
   late Timer _timer;
+  late AnimationController _pulseController;
   Duration _timeLeft = Duration.zero;
 
   // Tet 2027 (Lunar New Year - Feb 6, 2027)
@@ -23,6 +24,11 @@ class _TetCountdownState extends State<TetCountdown> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _calculateTimeLeft();
     });
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
   }
 
   void _calculateTimeLeft() {
@@ -36,6 +42,7 @@ class _TetCountdownState extends State<TetCountdown> {
   @override
   void dispose() {
     _timer.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -107,28 +114,38 @@ class _TetCountdownState extends State<TetCountdown> {
   Widget _buildTimePart(int value, String label) {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.red.shade700, Colors.red.shade900],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.red.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
-            ],
-          ),
-          child: Text(
-            value.toString().padLeft(2, '0'),
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: Colors.white, // High contrast
-              fontFamily: 'monospace',
-            ),
-          ),
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade700, Colors.red.shade900],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.3 + (0.3 * _pulseController.value)),
+                    blurRadius: 4 + (6 * _pulseController.value),
+                    spreadRadius: 1 + (2 * _pulseController.value),
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: Text(
+                value.toString().padLeft(2, '0'),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 4),
         Text(
