@@ -12,9 +12,11 @@ class SpendingDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<ShoppingProvider>();
     final stats = _calculateStats(provider);
-    final total = provider.getTotalEstimatedCost();
+    final filteredTotal = provider.getTotalEstimatedCost();
+    final globalTotal = provider.getGlobalTotalEstimatedCost();
+    final globalBought = provider.getGlobalTotalBoughtCost();
 
-    if (total == 0) {
+    if (globalTotal == 0) {
       return const SizedBox.shrink();
     }
 
@@ -72,7 +74,7 @@ class SpendingDashboard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          if (provider.tetBudget > 0 && total > provider.tetBudget)
+          if (provider.tetBudget > 0 && globalTotal > provider.tetBudget)
             Container(
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -94,9 +96,9 @@ class SpendingDashboard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget).clamp(0, 1),
+              value: provider.tetBudget <= 0 ? 0 : (globalTotal / provider.tetBudget).clamp(0, 1),
               backgroundColor: Colors.white24,
-              color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white,
+              color: globalTotal > provider.tetBudget ? Colors.yellowAccent : Colors.white,
               minHeight: 8,
             ),
           ),
@@ -105,21 +107,21 @@ class SpendingDashboard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Đã dùng: ${(provider.tetBudget <= 0 ? 0 : (total / provider.tetBudget * 100)).toStringAsFixed(1)}%",
+                "Đã dùng: ${(provider.tetBudget <= 0 ? 0 : (globalTotal / provider.tetBudget * 100)).toStringAsFixed(1)}%",
                 style: TextStyle(
-                  color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
+                  color: globalTotal > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
                   fontSize: 11,
-                  fontWeight: total > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: globalTotal > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               Text(
-                total > provider.tetBudget
-                    ? "Vượt: ${CurrencyUtils.format(total - provider.tetBudget)}"
-                    : "Còn lại: ${CurrencyUtils.format((provider.tetBudget - total).clamp(0, double.infinity))}",
+                globalTotal > provider.tetBudget
+                    ? "Vượt: ${CurrencyUtils.format(globalTotal - provider.tetBudget)}"
+                    : "Còn lại: ${CurrencyUtils.format((provider.tetBudget - globalTotal).clamp(0, double.infinity))}",
                 style: TextStyle(
-                  color: total > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
+                  color: globalTotal > provider.tetBudget ? Colors.yellowAccent : Colors.white70,
                   fontSize: 11,
-                  fontWeight: total > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: globalTotal > provider.tetBudget ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ],
@@ -139,7 +141,7 @@ class SpendingDashboard extends StatelessWidget {
                       style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "${provider.boughtCount}/${provider.totalCount} món",
+                      "${provider.globalBoughtCount}/${provider.globalTotalCount} món",
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ],
@@ -154,7 +156,7 @@ class SpendingDashboard extends StatelessWidget {
                       style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      CurrencyUtils.format(provider.getTotalBoughtCost()),
+                      CurrencyUtils.format(globalBought),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.greenAccent),
                     ),
                   ],
@@ -166,7 +168,7 @@ class SpendingDashboard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: provider.totalCount == 0 ? 0 : provider.boughtCount / provider.totalCount,
+              value: provider.globalTotalCount == 0 ? 0 : provider.globalBoughtCount / provider.globalTotalCount,
               backgroundColor: Colors.white24,
               color: Colors.greenAccent,
               minHeight: 6,
@@ -182,7 +184,7 @@ class SpendingDashboard extends StatelessWidget {
             ),
           ),
           Text(
-            CurrencyUtils.format(total),
+            CurrencyUtils.format(globalTotal),
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -201,7 +203,7 @@ class SpendingDashboard extends StatelessWidget {
                   PieChartData(
                     sectionsSpace: 4,
                     centerSpaceRadius: 35,
-                    sections: _buildSections(stats, total),
+                    sections: _buildSections(stats, filteredTotal),
                   ),
                 ),
               ),
@@ -210,7 +212,7 @@ class SpendingDashboard extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: stats.entries.map((entry) {
-                    final percentage = total == 0 ? 0 : (entry.value / total * 100);
+                    final percentage = filteredTotal == 0 ? 0 : (entry.value / filteredTotal * 100);
                     return _buildIndicator(
                       entry.key,
                       _getCategoryColor(entry.key),

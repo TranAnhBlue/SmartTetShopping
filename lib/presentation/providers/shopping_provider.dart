@@ -245,6 +245,9 @@ class ShoppingProvider extends ChangeNotifier {
         'price': cheapest.price,
       };
       
+      // Ép báo load lại giá từ DB nếu người dùng bấm xem lại (xóa cache ở RAM)
+      itemPrices.remove(item.id);
+
       // Sync to cloud
       await _syncService.uploadItem(item);
     }
@@ -293,6 +296,33 @@ class ShoppingProvider extends ChangeNotifier {
     }
     return total;
   }
+
+  // --- TỔNG THEO TOÀN DANH SÁCH KHÔNG FILTER (SỬ DỤNG CHO BUDGET) ---
+
+  double getGlobalTotalEstimatedCost() {
+    double total = 0;
+    for (var item in items) {
+      if (item.id == null) continue;
+      final cheapest = cheapestMarkets[item.id!];
+      final price = cheapest?['price'] ?? item.estimatedPrice;
+      total += price * item.quantity;
+    }
+    return total;
+  }
+
+  double getGlobalTotalBoughtCost() {
+    double total = 0;
+    for (var item in items) {
+      if (!item.isBought || item.id == null) continue;
+      final cheapest = cheapestMarkets[item.id!];
+      final price = cheapest?['price'] ?? item.estimatedPrice;
+      total += price * item.quantity;
+    }
+    return total;
+  }
+
+  int get globalBoughtCount => items.where((e) => e.isBought).length;
+  int get globalTotalCount => items.length;
 
   int get boughtCount => filteredItems.where((e) => e.isBought).length;
   int get totalCount => filteredItems.length;
@@ -439,8 +469,8 @@ class ShoppingProvider extends ChangeNotifier {
     }
 
     sb.writeln("--------------------------");
-    sb.writeln("💰 Tổng cộng: ${CurrencyUtils.format(getTotalEstimatedCost())}");
-    sb.writeln("✅ Đã mua: $boughtCount/${items.length} món");
+    sb.writeln("💰 Tổng cộng: ${CurrencyUtils.format(getGlobalTotalEstimatedCost())}");
+    sb.writeln("✅ Đã mua: $globalBoughtCount/$globalTotalCount món");
     sb.writeln("\n#SmartTetShopping #SamTet2027");
     
     return sb.toString();

@@ -170,45 +170,51 @@ class ItemCard extends StatelessWidget {
                 ),
 
                 /// ===== RIGHT SIDE =====
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                SizedBox(
+                  width: 90,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
 
-                    Text(
-                      CurrencyUtils.format(price * item.quantity),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: bought ? Colors.green : Colors.red,
-                        decoration: bought ? TextDecoration.lineThrough : null,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-
-                        /// EDIT
-                        InkWell(
-                          onTap: onEdit,
-                          child: const Icon(Icons.edit, size: 20),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        /// DELETE
-                        InkWell(
-                          onTap: onDelete,
-                          child: const Icon(
-                            Icons.delete,
-                            size: 20,
-                            color: Colors.red,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          CurrencyUtils.format(price * item.quantity),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: bought ? Colors.green : Colors.red,
+                            decoration: bought ? TextDecoration.lineThrough : null,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+
+                          /// EDIT
+                          InkWell(
+                            onTap: onEdit,
+                            child: const Icon(Icons.edit, size: 20),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          /// DELETE
+                          InkWell(
+                            onTap: onDelete,
+                            child: const Icon(
+                              Icons.delete,
+                              size: 20,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
