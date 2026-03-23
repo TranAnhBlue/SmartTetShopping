@@ -38,6 +38,7 @@ import 'domain/usecases/category/get_categories_usecase.dart';
 import 'presentation/providers/shopping_provider.dart';
 import 'presentation/providers/price_provider.dart';
 import 'presentation/providers/lucky_money_provider.dart';
+import 'presentation/providers/music_provider.dart';
 
 /// ⭐ Web SQLite
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -130,6 +131,11 @@ Future<void> main() async {
         /// LUCKY MONEY PROVIDER
         ChangeNotifierProvider(
           create: (_) => LuckyMoneyProvider()..loadLuckyMoney(),
+        ),
+
+        /// 🎵 MUSIC PROVIDER
+        ChangeNotifierProvider(
+          create: (_) => MusicProvider()..playMusic(),
         ),
       ],
       child: const MyApp(),

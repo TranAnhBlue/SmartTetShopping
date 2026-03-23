@@ -58,6 +58,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   url_launcher: ^6.3.2
+  audioplayers: ^6.1.0
   webview_flutter: ^4.13.1
   http: ^1.6.0
   firebase_core: ^4.5.0
@@ -89,6 +90,7 @@ flutter:
   assets:
     - assets/animation/
     - assets/images/
+    - assets/audio/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
