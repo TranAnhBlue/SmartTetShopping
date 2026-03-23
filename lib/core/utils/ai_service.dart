@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import '../constants/app_constants.dart';
+import '../constants/api_keys.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
@@ -13,14 +13,14 @@ class AIService {
   void init() {
     _model = GenerativeModel(
       model: 'gemini-2.5-flash',
-      apiKey: AppConstants.geminiApiKey,
+      apiKey: ApiKeys.gemini,
     );
   }
 
   /// Generates a suggested shopping list for Tet based on Gemini AI
   Future<List<Map<String, dynamic>>> generateShoppingList(String query) async {
     // Chỉ trả về fallback nếu key vẫn là placeholder mặc định
-    if (AppConstants.geminiApiKey == "AIzaSyApBs1vYYRTh5-uJN-H0APiAofBk1GcdYE" || AppConstants.geminiApiKey.isEmpty) {
+    if (ApiKeys.gemini.isEmpty || ApiKeys.gemini.startsWith("YOUR_")) {
       return _generateFallbackList(query);
     }
 
@@ -57,8 +57,8 @@ class AIService {
 
   /// Analyzes a receipt image and extracts shopping items
   Future<List<Map<String, dynamic>>> analyzeReceipt(Uint8List imageBytes) async {
-    if (AppConstants.geminiApiKey == "AIzaSyCsIhYoVXQbjYgfNdYa9Ui8lyVZLGZL5uw" || AppConstants.geminiApiKey.isEmpty) {
-      throw Exception("Vui lòng cài đặt Gemini API Key để sử dụng tính năng này.");
+    if (ApiKeys.gemini.isEmpty || ApiKeys.gemini.startsWith("YOUR_")) {
+      throw Exception("Vui lòng cài đặt Gemini API Key trong lib/core/constants/api_keys.dart");
     }
 
     try {
@@ -99,8 +99,8 @@ class AIService {
 
   /// Provides expert advice on choosing ingredients or traditional Tet recipes
   Future<String> getTetAdvice(String query) async {
-    if (AppConstants.geminiApiKey == "AIzaSyDJaIkEe3rfbD2TSuN16c393ig_RDRJ6D8" || AppConstants.geminiApiKey.isEmpty) {
-      return "💡 Chào bạn! Hãy cài đặt Gemini API Key để nhận lời khuyên chuyên sâu từ AI nhé!";
+    if (ApiKeys.gemini.isEmpty || ApiKeys.gemini.startsWith("YOUR_")) {
+      return "💡 Chào bạn! Hãy cài đặt Gemini API Key trong lib/core/constants/api_keys.dart để nhận lời khuyên chuyên sâu từ AI nhé!";
     }
 
     try {
@@ -117,7 +117,7 @@ class AIService {
 
   /// Generates personalized Tet greetings using AI
   Future<List<String>> generateGreeting(String group, {String? customQuery}) async {
-    if (AppConstants.geminiApiKey == "AIzaSyDJaIkEe3rfbD2TSuN16c393ig_RDRJ6D8" || AppConstants.geminiApiKey.isEmpty) {
+    if (ApiKeys.gemini.isEmpty || ApiKeys.gemini.startsWith("YOUR_")) {
        return _generateFallbackGreetings(group);
     }
 
@@ -147,7 +147,7 @@ class AIService {
 
   /// Analyzes the current shopping list and suggests missing items
   Future<String?> getMissingItemsSuggestions(List<String> currentItems) async {
-    if (AppConstants.geminiApiKey == "AIzaSyDeyOYzI_HvASuMDeLx1lMkLZ83HEoOE3c" || AppConstants.geminiApiKey.isEmpty) {
+    if (ApiKeys.gemini.isEmpty || ApiKeys.gemini.startsWith("YOUR_")) {
        return null;
     }
 

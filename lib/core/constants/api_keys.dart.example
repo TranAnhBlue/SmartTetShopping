@@ -4,8 +4,8 @@ class ApiKeys {
   static const String googleMaps = "YOUR_GOOGLE_MAPS_API_KEY_HERE";
   
   // TODO: Thay bằng API Key OpenWeatherMap thực tế (Free)
-  static const String openWeatherMap = "f0b47cb8f9324eeba3982141262303";
+  static const String openWeatherMap = "YOUR_OPENWEATHERMAP_API_KEY_HERE";
 
   // Gemini API Key
-  static const String gemini = "AIzaSyBRORAvX7-JV_KvRGmnOTi8_N9JmWyR3DM";
+  static const String gemini = "YOUR_GEMINI_API_KEY_HERE";
 }
