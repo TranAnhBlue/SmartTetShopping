@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/shopping_provider.dart';
+import '../../core/utils/sound_service.dart';
+import '../../core/utils/tts_helper.dart';
 import 'dart:ui';
 
 class AISmartReminder extends StatefulWidget {
@@ -12,6 +14,7 @@ class AISmartReminder extends StatefulWidget {
 
 class _AISmartReminderState extends State<AISmartReminder> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
+  String? _lastSuggestion;
 
   @override
   void initState() {
@@ -20,6 +23,13 @@ class _AISmartReminderState extends State<AISmartReminder> with SingleTickerProv
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+  }
+
+  void _checkAndPlaySound(String? currentSuggestion) {
+    if (currentSuggestion != null && currentSuggestion != _lastSuggestion) {
+      _lastSuggestion = currentSuggestion;
+      SoundService().playAIPing();
+    }
   }
 
   @override
@@ -35,6 +45,11 @@ class _AISmartReminderState extends State<AISmartReminder> with SingleTickerProv
     final isThinking = provider.isAIThinking;
 
     if (!isThinking && suggestion == null) return const SizedBox.shrink();
+    
+    // Play sound when new suggestion arrives
+    if (!isThinking) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkAndPlaySound(suggestion));
+    }
 
     return AnimatedBuilder(
       animation: _pulseController,
@@ -121,9 +136,19 @@ class _AISmartReminderState extends State<AISmartReminder> with SingleTickerProv
                       ),
                     ),
                     if (!isThinking)
-                      IconButton(
-                        icon: const Icon(Icons.refresh, size: 18, color: Colors.white54),
-                        onPressed: () => provider.updateAISuggestion(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (suggestion != null)
+                            IconButton(
+                              icon: const Icon(Icons.volume_up, size: 18, color: Colors.blue),
+                              onPressed: () => TTSHelper().speak(suggestion),
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.refresh, size: 18, color: Colors.white54),
+                            onPressed: () => provider.updateAISuggestion(),
+                          ),
+                        ],
                       ),
                   ],
                 ),

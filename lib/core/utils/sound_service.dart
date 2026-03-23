@@ -52,6 +52,16 @@ class SoundService {
     }
   }
 
+  /// Phát tiếng Ping "công nghệ" khi AI xuất hiện/nhắc nhở
+  Future<void> playAIPing() async {
+    if (!_soundEnabled) return;
+    try {
+      await _player.play(AssetSource('audio/sfx_ai_ping.mp3'), volume: 0.4);
+    } catch (e) {
+      debugPrint("SoundService: Missing sfx_ai_ping.mp3");
+    }
+  }
+
   /// Phát tiếng ting nhẹ khi hoàn thành tác vụ
   Future<void> playSuccess() async {
     if (!_soundEnabled) return;
