@@ -39,6 +39,7 @@ import 'presentation/providers/shopping_provider.dart';
 import 'presentation/providers/price_provider.dart';
 import 'presentation/providers/lucky_money_provider.dart';
 import 'presentation/providers/music_provider.dart';
+import 'presentation/providers/weather_provider.dart';
 
 /// ⭐ Web SQLite
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
@@ -136,6 +137,11 @@ Future<void> main() async {
         /// 🎵 MUSIC PROVIDER
         ChangeNotifierProvider(
           create: (_) => MusicProvider()..playMusic(),
+        ),
+
+        /// 🌤️ WEATHER PROVIDER
+        ChangeNotifierProvider(
+          create: (_) => WeatherProvider()..updateWeather(),
         ),
       ],
       child: const MyApp(),

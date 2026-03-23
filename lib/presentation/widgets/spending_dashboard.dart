@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../../core/utils/currency_utils.dart';
 import '../providers/shopping_provider.dart';
+import '../providers/weather_provider.dart';
+import 'weather_card.dart';
 
 class SpendingDashboard extends StatelessWidget {
   const SpendingDashboard({super.key});
@@ -17,7 +19,10 @@ class SpendingDashboard extends StatelessWidget {
     final globalBought = provider.getGlobalTotalBoughtCost();
 
     if (globalTotal == 0) {
-      return const SizedBox.shrink();
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: WeatherCard(),
+      );
     }
 
     return Container(

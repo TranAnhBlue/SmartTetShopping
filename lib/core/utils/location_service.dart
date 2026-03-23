@@ -32,6 +32,17 @@ class LocationService {
     }
   }
 
+  Future<Position?> getCurrentPosition() async {
+    try {
+      return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 5), // Thêm timeout 5s để tránh quay mãi
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Mock geofencing check
   /// In a real app, this would use Geolocator.getPositionStream or Geofencing plugins
   void checkProximity(double marketLat, double marketLon, String marketName) async {
