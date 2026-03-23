@@ -73,7 +73,6 @@ class LuckyWheelState extends State<LuckyWheel> with TickerProviderStateMixin {
   void spin() {
     if (_isSpinning) return;
 
-    SoundService().playSpin(); // Phát tiếng xoay
     widget.onStart();
     setState(() => _isSpinning = true);
 

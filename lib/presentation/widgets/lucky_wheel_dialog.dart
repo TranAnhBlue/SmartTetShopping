@@ -63,6 +63,9 @@ class _LuckyWheelDialogState extends State<LuckyWheelDialog> {
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    
+    // Phát âm thanh intro 1 lần khi mở dialog
+    SoundService().playSpin();
   }
 
   @override
