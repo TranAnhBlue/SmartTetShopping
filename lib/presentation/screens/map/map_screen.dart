@@ -391,7 +391,34 @@ out center 10;
       final route = routes[0];
 
       _routeDistance = '${((route['distance'] as num) / 1000).toStringAsFixed(1)} km';
-      _routeDuration = '${((route['duration'] as num) / 60).ceil()} phút';
+      
+      // --- LOGIC FIX: Manual Duration Estimation ---
+      // OSRM demo often returns car speeds for all profiles.
+      // We manually estimate based on typical speeds:
+      // Walking: 5km/h, Motorbike: 35km/h, Car: 45km/h
+      final double distanceM = (route['distance'] as num).toDouble();
+      int durationMinutes;
+      
+      switch (_travelMode) {
+        case 'walking':
+          durationMinutes = (distanceM / 83.3).ceil(); // 5000m / 60min = 83.3 m/min
+          break;
+        case 'motorbike':
+          durationMinutes = (distanceM / 583.3).ceil(); // 35000m / 60min = 583.3 m/min
+          break;
+        case 'car':
+        default:
+          durationMinutes = (distanceM / 750.0).ceil(); // 45000m / 60min = 750 m/min
+          break;
+      }
+
+      if (durationMinutes > 60) {
+        final hours = durationMinutes ~/ 60;
+        final mins = durationMinutes % 60;
+        _routeDuration = '${hours}h ${mins}p';
+      } else {
+        _routeDuration = '$durationMinutes phút';
+      }
 
       final coords = route['geometry']['coordinates'] as List;
       _routePoints = coords.map<LatLng>((c) => LatLng((c[1] as num).toDouble(), (c[0] as num).toDouble())).toList();
