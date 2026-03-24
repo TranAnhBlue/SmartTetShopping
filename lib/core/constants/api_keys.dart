@@ -7,5 +7,5 @@ class ApiKeys {
   static const String openWeatherMap = "f0b47cb8f9324eeba3982141262303";
 
   // Gemini API Key
-  static const String gemini = "AIzaSyBRORAvX7-JV_KvRGmnOTi8_N9JmWyR3DM";
+  static const String gemini = "AIzaSyDRhA6zZ8Raykq1e6d18kqzw1zrfW_Aybw";
 }
